@@ -1,0 +1,30 @@
+<table class="data-table report-player-table">
+  <thead>
+    <tr>
+      <th>Игрок / Команда</th>
+      {% if action.HasOutcome %}
+      <th>Всего</th>
+      <th>Успех</th>
+      <th>Неудача</th>
+      <th>%</th>
+      {% else %}
+      <th>Кол-во</th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in rows %}
+    <tr>
+      <td>{{ row.label }}</td>
+      {% if action.HasOutcome %}
+      <td>{{ row.total }}</td>
+      <td>{{ row.success }}</td>
+      <td>{{ row.failure }}</td>
+      <td>{{ row.success_pct if row.success_pct is not none else "—" }}</td>
+      {% else %}
+      <td>{{ row.total }}</td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

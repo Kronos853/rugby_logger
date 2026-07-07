@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Матчи</h1>
+<div class="card">
+  <h3>Новый матч</h3>
+  <form method="post" action="{{ url_for('matches_create') }}">
+    <div class="form-row">
+      <select name="sportTemplateId">
+        {% for t in templates %}
+        <option value="{{ t.Id }}">{{ t.Name }}</option>
+        {% endfor %}
+      </select>
+      <input type="date" name="matchDate" value="{{ today }}" />
+      <input name="tournament" list="tournaments-list" placeholder="Турнир" autocomplete="off" />
+      <datalist id="tournaments-list">
+        {% for t in tournaments %}
+        <option value="{{ t.Name }}"></option>
+        {% endfor %}
+      </datalist>
+    </div>
+    <div class="form-row">
+      <select name="homeTeamId">
+        <option value="">Домашняя команда</option>
+        {% for team in teams %}
+        <option value="{{ team.Id }}">{{ team.Name }}</option>
+        {% endfor %}
+      </select>
+      <select name="awayTeamId">
+        <option value="">Гостевая команда</option>
+        {% for team in teams %}
+        <option value="{{ team.Id }}">{{ team.Name }}</option>
+        {% endfor %}
+      </select>
+      <input name="scoreHome" placeholder="Счёт дом" style="width:90px;" />
+      <input name="scoreAway" placeholder="Счёт гост" style="width:90px;" />
+      <button class="btn btn-primary" type="submit">Создать матч</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <table class="data-table">
+    <thead><tr><th>Дата</th><th>Турнир</th><th>Матч</th><th>Счёт</th><th></th></tr></thead>
+    <tbody>
+      {% for m in matches %}
+      {% set home = (teams | selectattr("Id", "equalto", m.HomeTeamId) | list | first) %}
+      {% set away = (teams | selectattr("Id", "equalto", m.AwayTeamId) | list | first) %}
+      <tr>
+        <td>{{ m.MatchDate }}</td>
+        <td>{{ m.TournamentName or "—" }}</td>
+        <td>{{ home.Name if home else "?" }} — {{ away.Name if away else "?" }}</td>
+        <td>{{ scores[m.Id].home }}:{{ scores[m.Id].away }}</td>
+        <td>
+          <a href="{{ url_for('match_setup', match_id=m.Id) }}">Подготовка</a> |
+          <a href="{{ url_for('tagging_control', match_id=m.Id) }}">Разметка</a> |
+          <form method="post" action="{{ url_for('matches_delete', match_id=m.Id) }}" style="display:inline;">
+            <button class="btn btn-danger" type="submit">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+

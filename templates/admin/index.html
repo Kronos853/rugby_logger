@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Администрирование</h1>
+
+<div class="card">
+  <h3>Резервная копия базы данных</h3>
+  <p class="muted">Скачайте полную копию SQLite базы (.db) со всеми шаблонами, командами, матчами и событиями.</p>
+  <a class="btn btn-primary" href="{{ url_for('admin_export_db') }}">Скачать базу данных (.db)</a>
+</div>
+
+<div class="card">
+  <h3>Импорт базы данных</h3>
+  <p class="muted">Загрузите ранее экспортированный .db файл. Перед заменой текущая база копируется в backup.</p>
+  <form method="post" action="{{ url_for('admin_import_db') }}" enctype="multipart/form-data">
+    <div class="form-row">
+      <input type="file" name="dbFile" accept=".db,application/octet-stream" required />
+      <button class="btn" type="submit">Импортировать .db</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+

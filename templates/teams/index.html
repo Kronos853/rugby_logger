@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Команды</h1>
+<div class="card">
+  <form class="form-row" method="post" action="{{ url_for('teams_create') }}" hx-post="{{ url_for('teams_create') }}" hx-target="#teams-table" hx-swap="outerHTML">
+    <input name="name" placeholder="Название команды" />
+    <button class="btn btn-primary" type="submit">Добавить</button>
+  </form>
+  <p class="muted">Команда может быть без игроков — для соперника или командных действий.</p>
+</div>
+{% include "teams/_table.html" %}
+{% endblock %}
+

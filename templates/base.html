@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Sports Video Logger{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}" />
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="{{ url_for('static', filename='form-scroll.js') }}" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="app-shell">
+    <nav class="app-nav">
+      <a href="{{ url_for('home') }}">Главная</a>
+      <a href="{{ url_for('templates_page') }}">Шаблоны</a>
+      <a href="{{ url_for('teams_page') }}">Команды</a>
+      <a href="{{ url_for('squads_page') }}">Составы</a>
+      <a href="{{ url_for('matches_page') }}">Матчи</a>
+      <a href="{{ url_for('reports_page') }}">Отчёты</a>
+      <a href="{{ url_for('settings_page') }}">Настройки</a>
+      <a href="{{ url_for('admin_page') }}">Администрирование</a>
+    </nav>
+    <main class="app-main">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="card">
+            {% for category, message in messages %}
+              <p class="{{ 'muted' if category == 'ok' else '' }}" style="margin: 4px 0;">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>
+

@@ -1,0 +1,39 @@
+<div class="card" id="timeline-panel">
+  <h3>Таймлайн матча (свежие сверху)</h3>
+  <p class="timeline-hint">Клик по строке — выбор события и перемотка видео</p>
+  <div class="table-wrapper">
+    <table class="events-table">
+      <thead>
+        <tr>
+          <th>Тайм</th><th>Время</th><th>Игрок/Команда</th><th>Категория</th><th>Действие</th><th>Результат</th><th>Комментарий</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ev in events|reverse %}
+        {% set action = (actions | selectattr("Id", "equalto", ev.ActionId) | list | first) %}
+        {% set category = category_by_id.get(action.CategoryId) if action else none %}
+        {% set player = (players | selectattr("Id", "equalto", ev.PlayerId) | list | first) %}
+        {% set team = (teams | selectattr("Id", "equalto", ev.TeamId) | list | first) %}
+        {% set action_name = action.Name if action else "" %}
+        {% set action_name_lower = action_name|lower %}
+        {% set scoring = action_name_lower == "try" or action_name_lower.startswith("conversion") %}
+        <tr class="timeline-row {{ 'selected' if ev.Id == selected_event_id else '' }} {{ 'scoring-event' if scoring and ev.Outcome != 'Failure' else '' }}" data-timestamp-sec="{{ ev.TimestampSec }}">
+          <td>{{ ev.PeriodNumber }}</td>
+          <td>{{ ev.TimestampSec | format_time }}</td>
+          <td>{{ player.Name if player else (team.Name if team else "—") }}</td>
+          <td>{{ category.Name if category else "—" }}</td>
+          <td>{{ action.Name if action else "—" }}</td>
+          <td>{{ ev.Outcome or "—" }}</td>
+          <td class="timeline-comment"{% if ev.Comment %} title="{{ ev.Comment }}"{% endif %}>{{ ev.Comment or "—" }}</td>
+          <td class="timeline-actions">
+            <form class="timeline-select-form" method="post" action="{{ url_for('tagging_select_event', match_id=match.Id, event_id=ev.Id) }}"></form>
+            <form class="timeline-delete-form" method="post" action="{{ url_for('tagging_delete_event', match_id=match.Id, event_id=ev.Id) }}">
+              <button class="btn btn-danger" type="submit" title="Удалить">✕</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

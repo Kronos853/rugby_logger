@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Видео матча #{{ match_id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='tagging.css') }}" />
+  <script src="{{ url_for('static', filename='tagging.js') }}" defer></script>
+</head>
+<body class="video-page">
+  <div class="video-setup" id="video-setup">
+    <h2>Матч #{{ match_id }} — выберите видеофайл</h2>
+    <input type="file" id="video-file" accept="video/*" />
+  </div>
+  <video id="video-player" class="video-player" controls style="display:none;"></video>
+</body>
+</html>
+

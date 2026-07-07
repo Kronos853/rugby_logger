@@ -1,0 +1,253 @@
+.tagging-page {
+  display: flex;
+  gap: 12px;
+}
+
+.tagging-sidebar {
+  flex: 0.7;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tagging-main {
+  flex: 2.3;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-capture {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  background: #0d6efd;
+  color: white;
+  border: none;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: 6px;
+}
+
+.btn-capture:hover {
+  background: #0b5ed7;
+}
+
+.status-bar {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 6px;
+  background: #e2e3e5;
+  border-radius: 4px;
+  border: 1px solid #d3d3d4;
+  text-align: center;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.meta-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #e9ecef;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.half-selector {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.tagging-row {
+  display: flex;
+  gap: 10px;
+}
+
+.tagging-row .card {
+  flex: 1;
+}
+
+.tagging-row .card.wide {
+  flex: 1.6;
+}
+
+.grid-players {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.grid-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+
+.grid-outcome {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.grid-comments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.tag-btn {
+  padding: 8px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background: #f8f9fa;
+  user-select: none;
+}
+
+.tag-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.player-btn {
+  background: #e9ecef;
+}
+
+.player-btn.substitute {
+  background: #f8f9fa;
+  border-style: dashed;
+}
+
+.player-btn.selected,
+.team-btn.selected {
+  background: #0d6efd !important;
+  color: white !important;
+  border-color: #0a58ca;
+}
+
+.team-btn {
+  background: #dee2e6;
+  font-weight: 700;
+}
+
+.section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #6c757d;
+  margin: 6px 0 4px;
+  font-weight: 700;
+}
+
+.outcome-btn.success {
+  background: #28a745;
+  color: white;
+  border-color: #1e7e34;
+}
+
+.outcome-btn.failure {
+  background: #dc3545;
+  color: white;
+  border-color: #bd2130;
+}
+
+.outcome-btn.none {
+  background: #6c757d;
+  color: white;
+  border-color: #545b62;
+}
+
+.action-handling { background: #e2f0d9; color: #385723; border-color: #c5e0b4; }
+.action-offence { background: #c6e0b4; color: #385723; border-color: #a9d18e; }
+.action-tackle { background: #fff2cc; color: #7f6000; border-color: #ffd966; }
+.action-kicking { background: #fce4d6; color: #c65911; border-color: #f8cbad; }
+.action-setpiece { background: #ddebf7; color: #1f4e78; border-color: #b4c6e7; }
+.action-defence { background: #f2f2f2; color: #333; border-color: #d9d9d9; }
+.action-discipline { background: #f8d7da; color: #842029; border-color: #f5c2c7; }
+.action-substitute { background: #e1d5e7; color: #624a6b; border-color: #b5a3be; }
+
+.table-wrapper {
+  max-height: 440px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.events-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.events-table th {
+  background: #f1f3f5;
+  position: sticky;
+  top: 0;
+  padding: 6px;
+  font-weight: 600;
+  border-bottom: 2px solid #dee2e6;
+  z-index: 1;
+}
+
+.events-table td {
+  padding: 5px 6px;
+  border-bottom: 1px solid #dee2e6;
+  cursor: pointer;
+}
+
+.events-table tr:hover td {
+  background: #f8f9fa;
+}
+
+.events-table tr.selected td {
+  background: #e7f1ff !important;
+  font-weight: bold;
+}
+
+.events-table tr.scoring-event td {
+  font-weight: 700;
+}
+
+.comment-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+}
+
+.video-page {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  overflow: hidden;
+}
+
+body.video-page {
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.video-setup {
+  color: white;
+  text-align: center;
+  padding: 30px;
+  margin-top: 10%;
+}
+
+.video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

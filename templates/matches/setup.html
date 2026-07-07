@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('matches_page') }}">← Матчи</a></p>
+{% set home = (teams | selectattr("Id", "equalto", match.HomeTeamId) | list | first) %}
+{% set away = (teams | selectattr("Id", "equalto", match.AwayTeamId) | list | first) %}
+<h1 class="page-title">Подготовка: {{ home.Name if home else "?" }} — {{ away.Name if away else "?" }}</h1>
+
+<div class="card">
+  <h3>Общие сведения</h3>
+  <form class="form-row" method="post" action="{{ url_for('match_setup_update_details', match_id=match.Id) }}">
+    <input type="date" name="matchDate" value="{{ match.MatchDate }}" required />
+    <input name="tournament" list="tournaments-list" value="{{ match.TournamentName or '' }}" placeholder="Турнир" autocomplete="off" />
+    <datalist id="tournaments-list">
+      {% for t in tournaments %}
+      <option value="{{ t.Name }}"></option>
+      {% endfor %}
+    </datalist>
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+  </form>
+</div>
+
+{% include "tagging/_score.html" %}
+
+{% set home_lineup = lineups | selectattr("TeamId", "equalto", match.HomeTeamId) | list %}
+{% set away_lineup = lineups | selectattr("TeamId", "equalto", match.AwayTeamId) | list %}
+{% set home_squads = squads | selectattr("TeamId", "equalto", match.HomeTeamId) | list %}
+{% set away_squads = squads | selectattr("TeamId", "equalto", match.AwayTeamId) | list %}
+
+<div class="grid-2">
+  <div class="card">
+    <h3>Домашняя: {{ home.Name if home else "?" }}</h3>
+    <form class="form-row" method="post" action="{{ url_for('match_setup_apply_squad', match_id=match.Id) }}">
+      <input type="hidden" name="side" value="home" />
+      <select name="squadId">
+        <option value="">Выберите состав</option>
+        {% for s in home_squads %}<option value="{{ s.Id }}">{{ s.Name }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary" type="submit">Применить состав</button>
+    </form>
+    <table class="data-table">
+      <tbody>
+      {% for row in home_lineup %}
+        {% set player = (players | selectattr("Id", "equalto", row.PlayerId) | list | first) %}
+        <tr>
+          <td>{{ player.Name if player else "?" }}</td>
+          <td>{{ row.Position or "—" }}</td>
+          <td>
+            <form method="post" action="{{ url_for('match_setup_toggle_lineup_role', match_id=match.Id) }}">
+              <input type="hidden" name="rowId" value="{{ row.Id }}" />
+              <button class="btn" type="submit">{{ "→ Замена" if row.LineupRole == "starter" else "→ Основной" }}</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Гостевая: {{ away.Name if away else "?" }}</h3>
+    <form class="form-row" method="post" action="{{ url_for('match_setup_apply_squad', match_id=match.Id) }}">
+      <input type="hidden" name="side" value="away" />
+      <select name="squadId">
+        <option value="">Выберите состав</option>
+        {% for s in away_squads %}<option value="{{ s.Id }}">{{ s.Name }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary" type="submit">Применить состав</button>
+    </form>
+    <table class="data-table">
+      <tbody>
+      {% for row in away_lineup %}
+        {% set player = (players | selectattr("Id", "equalto", row.PlayerId) | list | first) %}
+        <tr>
+          <td>{{ player.Name if player else "?" }}</td>
+          <td>{{ row.Position or "—" }}</td>
+          <td>
+            <form method="post" action="{{ url_for('match_setup_toggle_lineup_role', match_id=match.Id) }}">
+              <input type="hidden" name="rowId" value="{{ row.Id }}" />
+              <button class="btn" type="submit">{{ "→ Замена" if row.LineupRole == "starter" else "→ Основной" }}</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <a class="btn btn-success" href="{{ url_for('tagging_control', match_id=match.Id) }}">Перейти к разметке →</a>
+  <a class="btn" href="{{ url_for('tagging_video', match_id=match.Id) }}" target="_blank" rel="noreferrer">Открыть видео на 2-м мониторе</a>
+</div>
+{% endblock %}
+

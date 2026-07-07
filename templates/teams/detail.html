@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('teams_page') }}">← Команды</a></p>
+<h1 class="page-title">{{ team.Name }}</h1>
+
+<div class="card">
+  <form class="form-row" method="post" action="{{ url_for('team_create_player', team_id=team.Id) }}">
+    {% if show_inactive %}<input type="hidden" name="showInactive" value="1" />{% endif %}
+    <input name="name" placeholder="Короткое имя (разметка)" required />
+    <input name="position" placeholder="Позиция (опц.)" />
+    <button class="btn btn-primary" type="submit">Добавить игрока</button>
+  </form>
+</div>
+
+<div class="card">
+  <form method="get" action="{{ url_for('team_detail', team_id=team.Id) }}" class="form-row" style="margin-bottom: 12px;">
+    <label>
+      <input type="checkbox" name="show_inactive" value="1" {% if show_inactive %}checked{% endif %} onchange="this.form.submit()" />
+      Показывать неактивных
+    </label>
+  </form>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Имя</th><th>Полное имя</th><th>Дата рождения</th><th>Позиция</th>
+        {% if show_inactive %}<th>Статус</th>{% endif %}
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in players %}
+      <tr class="{{ 'player-inactive' if not player.IsActive else '' }}">
+        <td>{{ player.Name }}</td>
+        <td>{{ player.FullName or "—" }}</td>
+        <td>{{ player.BirthDay or "—" }}</td>
+        <td>{{ player.DefaultPosition or "—" }}</td>
+        {% if show_inactive %}
+        <td>{{ "Активен" if player.IsActive else "Неактивен" }}</td>
+        {% endif %}
+        <td>
+          <a class="btn" href="{{ url_for('team_edit_player', team_id=team.Id, player_id=player.Id) }}">Редактировать</a>
+          <form
+            class="player-delete-form"
+            method="post"
+            action="{{ url_for('team_delete_player', team_id=team.Id, player_id=player.Id) }}"
+            style="display:inline;"
+          >
+            {% if show_inactive %}<input type="hidden" name="showInactive" value="1" />{% endif %}
+            <button class="btn btn-danger" type="submit">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="{{ 6 if show_inactive else 5 }}">Нет игроков{% if not show_inactive %} (активных){% endif %}.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  document.querySelectorAll(".player-delete-form").forEach((form) => {
+    form.addEventListener("submit", (e) => {
+      const ok = window.confirm(
+        "Удалить игрока безвозвратно?\n\nВся информация об игроке будет стёрта. " +
+        "События в матчах сохранятся, но без привязки к игроку.\n\n" +
+        "Чтобы скрыть игрока из списков, используйте «Неактивен» на странице редактирования."
+      );
+      if (!ok) e.preventDefault();
+    });
+  });
+</script>
+{% endblock %}

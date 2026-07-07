@@ -1,0 +1,20 @@
+<div class="card" id="teams-table">
+  <table class="data-table">
+    <thead><tr><th>Название</th><th></th></tr></thead>
+    <tbody>
+      {% for team in teams %}
+      <tr>
+        <td>{{ team.Name }}</td>
+        <td>
+          <a href="{{ url_for('team_detail', team_id=team.Id) }}">Игроки →</a>
+          |
+          <form method="post" action="{{ url_for('teams_delete', team_id=team.Id) }}" hx-post="{{ url_for('teams_delete', team_id=team.Id) }}" hx-target="#teams-table" hx-swap="outerHTML" style="display:inline;">
+            <button class="btn btn-danger" type="submit">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+

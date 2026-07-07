@@ -1,0 +1,9 @@
+{% set home_team = (teams | selectattr("Id", "equalto", match.HomeTeamId) | list | first) %}
+{% set away_team = (teams | selectattr("Id", "equalto", match.AwayTeamId) | list | first) %}
+<div class="card" id="score-panel">
+  <div class="match-score">
+    <div class="match-score__team">{{ home_team.Name if home_team else "Домашние" }}</div>
+    <div class="match-score__values">{{ score.home }} : {{ score.away }}</div>
+    <div class="match-score__team">{{ away_team.Name if away_team else "Гости" }}</div>
+  </div>
+</div>

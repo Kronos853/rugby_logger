@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_report_results.html" import report_results %}
+{% block head %}
+<script src="{{ url_for('static', filename='reports.js') }}"></script>
+{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('team_detail', team_id=team.Id) }}">← {{ team.Name }}</a></p>
+<h1 class="page-title">Игрок: {{ player.Name }}</h1>
+
+<div class="card">
+  <h3>Профиль игрока</h3>
+  <form method="post" action="{{ url_for('team_update_player', team_id=team.Id, player_id=player.Id) }}">
+    <div class="form-row">
+      <label style="flex:1;">
+        <span class="section-label">Короткое имя (разметка)</span>
+        <input name="name" value="{{ player.Name }}" required />
+      </label>
+      <label style="flex:1.4;">
+        <span class="section-label">Полное имя</span>
+        <input name="fullName" value="{{ player.FullName or '' }}" placeholder="Иванов Иван Иванович" />
+      </label>
+    </div>
+    <div class="form-row">
+      <label style="flex:1;">
+        <span class="section-label">Дата рождения</span>
+        <input type="date" name="birthDay" value="{{ player.BirthDay or '' }}" />
+      </label>
+      <label style="flex:1;">
+        <span class="section-label">Позиция по умолчанию</span>
+        <input name="position" value="{{ player.DefaultPosition or '' }}" placeholder="Например: scrum-half" />
+      </label>
+    </div>
+    <div class="form-row">
+      <label>
+        <input type="checkbox" name="isActive" value="1" {% if player.IsActive %}checked{% endif %} />
+        Активен (доступен для составов и отображается в списке команды)
+      </label>
+      <button class="btn btn-primary" type="submit">Сохранить</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Статистика за последние 5 матчей</h3>
+  {% if last_matches %}
+    <p class="muted">
+      Матчи:
+      {% for m in last_matches %}
+        {{ m.MatchDate }}{% if not loop.last %}, {% endif %}
+      {% endfor %}
+    </p>
+    {% set match_dates = last_matches | map(attribute='MatchDate') | list %}
+    {% set report_ctx = {
+      'subject_type': 'player',
+      'subject_id': player.Id,
+      'date_from': match_dates | min,
+      'date_to': match_dates | max,
+      'tournament_id': none,
+      'match_id': none,
+      'scope': 'player'
+    } %}
+    {{ report_results(player_stats, report_ctx) }}
+  {% else %}
+    <p class="muted">Нет данных по матчам.</p>
+  {% endif %}
+</div>
+{% endblock %}

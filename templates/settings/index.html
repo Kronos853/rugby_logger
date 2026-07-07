@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Настройки</h1>
+
+<div class="card">
+  <h3>Основная команда</h3>
+  <p class="muted">Используется по умолчанию в форме отчётов (тип «Командный»).</p>
+  <form method="post" action="{{ url_for('settings_page') }}">
+    <div class="form-row">
+      <label>
+        Команда
+        <select name="primaryTeamId">
+          <option value="">— не выбрана —</option>
+          {% for team in teams %}
+          <option value="{{ team.Id }}" {% if primary_team_id == team.Id %}selected{% endif %}>{{ team.Name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button class="btn btn-primary" type="submit">Сохранить</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

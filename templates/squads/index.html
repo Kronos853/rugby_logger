@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Сохранённые составы</h1>
+
+<div class="card">
+  <form class="form-row" method="post" action="{{ url_for('squads_create') }}">
+    <select name="teamId">
+      <option value="">Команда</option>
+      {% for team in teams %}
+      <option value="{{ team.Id }}">{{ team.Name }}</option>
+      {% endfor %}
+    </select>
+    <input name="name" placeholder="Название состава" />
+    <input name="tournament" list="tournaments-list" placeholder="Турнир (опц.)" autocomplete="off" />
+    <datalist id="tournaments-list">
+      {% for t in tournaments %}
+      <option value="{{ t.Name }}"></option>
+      {% endfor %}
+    </datalist>
+    <button class="btn btn-primary" type="submit">Создать состав</button>
+  </form>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>Список составов</h3>
+    <table class="data-table">
+      <thead><tr><th>Команда</th><th>Состав</th><th>Турнир</th><th></th></tr></thead>
+      <tbody>
+        {% for squad in squads %}
+        {% set team = (teams | selectattr("Id", "equalto", squad.TeamId) | list | first) %}
+        <tr>
+          <td>{{ team.Name if team else "?" }}</td>
+          <td>{{ squad.Name }}</td>
+          <td>{{ squad.TournamentName or "—" }}</td>
+          <td>
+            <a href="{{ url_for('squads_page', edit=squad.Id) }}">Редактировать</a>
+            |
+            <form method="post" action="{{ url_for('squads_delete', squad_id=squad.Id) }}" style="display:inline;">
+              <button class="btn btn-danger" type="submit">Удалить</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if editing_squad %}
+  <div class="card">
+    <h3>Редактирование состава</h3>
+    <form class="form-row" method="post" action="{{ url_for('squads_update', squad_id=editing_squad.Id) }}">
+      <input name="name" value="{{ editing_squad.Name }}" />
+      <input name="tournament" list="tournaments-list-edit" value="{{ editing_squad.TournamentName or '' }}" placeholder="Турнир (опц.)" autocomplete="off" />
+      <datalist id="tournaments-list-edit">
+        {% for t in tournaments %}
+        <option value="{{ t.Name }}"></option>
+        {% endfor %}
+      </datalist>
+      <button class="btn btn-primary" type="submit">Сохранить</button>
+    </form>
+
+    <div class="form-row">
+      {% for p in team_players %}
+      {% set exists = squad_players | selectattr("PlayerId", "equalto", p.Id) | list %}
+      {% if not exists %}
+      <form method="post" action="{{ url_for('squads_add_player', squad_id=editing_squad.Id) }}">
+        <input type="hidden" name="playerId" value="{{ p.Id }}" />
+        <button class="btn" type="submit">+ {{ p.Name }}</button>
+      </form>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    <table class="data-table">
+      <thead><tr><th>Игрок</th><th>Роль</th><th></th></tr></thead>
+      <tbody>
+        {% for row in squad_players %}
+        {% set player = (team_players | selectattr("Id", "equalto", row.PlayerId) | list | first) %}
+        <tr>
+          <td>{{ player.Name if player else "?" }}</td>
+          <td>
+            <form method="post" action="{{ url_for('squads_toggle_role', squad_id=editing_squad.Id, row_id=row.Id) }}">
+              <button class="btn" type="submit">{{ "Основной" if row.LineupRole == "starter" else "Замена" }}</button>
+            </form>
+          </td>
+          <td>
+            <form method="post" action="{{ url_for('squads_delete_player', squad_id=editing_squad.Id, row_id=row.Id) }}">
+              <button class="btn btn-danger" type="submit">✕</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<p><a href="{{ url_for('matches_page') }}">Перейти к матчам →</a></p>
+{% endblock %}
+

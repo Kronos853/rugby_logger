@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Шаблоны спорта</h1>
+<div class="card">
+  <form class="form-row" method="post" action="{{ url_for('templates_create') }}" hx-post="{{ url_for('templates_create') }}" hx-target="#templates-table" hx-swap="outerHTML">
+    <input name="name" placeholder="Название шаблона" />
+    <button class="btn btn-primary" type="submit">Добавить</button>
+  </form>
+  <form method="post" action="{{ url_for('templates_seed_rugby') }}" hx-post="{{ url_for('templates_seed_rugby') }}" hx-target="#templates-table" hx-swap="outerHTML">
+    <button class="btn" type="submit">Загрузить Регби-7</button>
+  </form>
+</div>
+{% include "templates/_table.html" %}
+{% endblock %}
+

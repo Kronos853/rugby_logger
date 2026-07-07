@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p><a href="{{ url_for('templates_page') }}">← Шаблоны</a></p>
+
+<h1 class="page-title">Категории и действия: {{ template.Name }}</h1>
+
+
+
+<div class="card">
+
+  <form class="form-row" method="post" action="{{ url_for('template_update_period_count', template_id=template.Id) }}">
+
+    <label>
+
+      Количество таймов/периодов
+
+      <input type="number" name="periodCount" min="1" max="9" value="{{ template.PeriodCount or 2 }}" />
+
+    </label>
+
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+
+  </form>
+
+</div>
+
+
+
+<div class="card">
+
+  <form class="form-row" method="post" action="{{ url_for('template_create_category', template_id=template.Id) }}">
+
+    <input name="name" placeholder="Новая категория" />
+
+    <button class="btn btn-primary" type="submit">Добавить категорию</button>
+
+  </form>
+
+</div>
+
+
+
+{% for cat in categories %}
+
+<div class="card">
+
+  <div class="form-row" style="justify-content:space-between; align-items:center;">
+
+    <form class="form-row" method="post" action="{{ url_for('template_rename_category', template_id=template.Id, category_id=cat.Id) }}">
+
+      <input name="name" value="{{ cat.Name }}" />
+
+      <button class="btn btn-primary" type="submit">Сохранить категорию</button>
+
+    </form>
+
+    <form method="post" action="{{ url_for('template_toggle_category_report', template_id=template.Id, category_id=cat.Id) }}"
+
+          hx-post="{{ url_for('template_toggle_category_report', template_id=template.Id, category_id=cat.Id) }}"
+
+          hx-trigger="change" hx-swap="none">
+
+      <input type="hidden" name="showInReport" value="0" />
+
+      <label>
+
+        <input type="checkbox" name="showInReport" value="1" {% if cat.ShowInReport %}checked{% endif %} />
+
+        В отчёте
+
+      </label>
+
+    </form>
+
+    <form method="post" action="{{ url_for('template_delete_category', template_id=template.Id, category_id=cat.Id) }}">
+
+      <button class="btn btn-danger" type="submit">Удалить категорию</button>
+
+    </form>
+
+  </div>
+
+
+
+  <form class="form-row" method="post" action="{{ url_for('template_create_action', template_id=template.Id, category_id=cat.Id) }}">
+
+    <input name="name" placeholder="Новое действие" />
+
+    <input name="colorClass" placeholder="Цвет (handling/offence/...)" />
+
+    <button class="btn" type="submit">Добавить действие</button>
+
+  </form>
+
+
+
+  <table class="data-table">
+
+    <thead><tr><th>Действие</th><th>Категория</th><th>Результат</th><th>В отчёте</th><th>Подсказки</th><th></th></tr></thead>
+
+    <tbody>
+
+      {% for act in actions.get(cat.Id, []) %}
+
+      <tr>
+
+        <td>
+
+          <form class="form-row" method="post" action="{{ url_for('template_rename_action', template_id=template.Id, action_id=act.Id) }}">
+
+            <input name="name" value="{{ act.Name }}" />
+
+            <button class="btn btn-primary" type="submit">Сохранить</button>
+
+          </form>
+
+        </td>
+
+        <td>
+
+          <form method="post" action="{{ url_for('template_move_action', template_id=template.Id, action_id=act.Id) }}">
+
+            <select name="categoryId" onchange="this.form.submit()">
+
+              {% for c in categories %}
+
+              <option value="{{ c.Id }}" {% if c.Id == cat.Id %}selected{% endif %}>{{ c.Name }}</option>
+
+              {% endfor %}
+
+            </select>
+
+          </form>
+
+        </td>
+
+        <td>
+
+          <form method="post" action="{{ url_for('template_toggle_action_outcome', template_id=template.Id, action_id=act.Id) }}">
+
+            <button class="btn" type="submit">{{ "Да" if act.HasOutcome else "Нет" }}</button>
+
+          </form>
+
+        </td>
+
+        <td>
+
+          <form method="post" action="{{ url_for('template_toggle_action_report', template_id=template.Id, action_id=act.Id) }}"
+
+                hx-post="{{ url_for('template_toggle_action_report', template_id=template.Id, action_id=act.Id) }}"
+
+                hx-trigger="change" hx-swap="none">
+
+            <input type="hidden" name="showInReport" value="0" />
+
+            <input type="checkbox" name="showInReport" value="1" {% if act.ShowInReport %}checked{% endif %} />
+
+          </form>
+
+        </td>
+
+        <td>
+
+          <div class="form-row">
+
+            {% for c in comments.get(act.Id, []) %}
+
+              <span class="muted">{{ c.Text }}</span>
+
+              <form method="post" action="{{ url_for('template_delete_comment', template_id=template.Id, comment_id=c.Id) }}">
+
+                <button type="submit" class="btn btn-danger">✕</button>
+
+              </form>
+
+            {% endfor %}
+
+          </div>
+
+          <form class="form-row" method="post" action="{{ url_for('template_create_comment', template_id=template.Id, action_id=act.Id) }}">
+
+            <input name="text" placeholder="Подсказка" />
+
+            <button class="btn" type="submit">+</button>
+
+          </form>
+
+        </td>
+
+        <td>
+
+          <form method="post" action="{{ url_for('template_delete_action', template_id=template.Id, action_id=act.Id) }}">
+
+            <button class="btn btn-danger" type="submit">Удалить</button>
+
+          </form>
+
+        </td>
+
+      </tr>
+
+      {% endfor %}
+
+    </tbody>
+
+  </table>
+
+</div>
+
+{% endfor %}
+
+{% endblock %}
+
+

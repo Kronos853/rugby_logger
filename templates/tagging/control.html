@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Разметка матча</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='tagging.css') }}" />
+  <script src="{{ url_for('static', filename='form-scroll.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='tagging.js') }}" defer></script>
+</head>
+<body class="tagging-control">
+  <nav class="app-nav tagging-control-nav">
+    <a href="{{ url_for('home') }}">Главная</a>
+    <a href="{{ url_for('templates_page') }}">Шаблоны</a>
+    <a href="{{ url_for('teams_page') }}">Команды</a>
+    <a href="{{ url_for('squads_page') }}">Составы</a>
+    <a href="{{ url_for('matches_page') }}">Матчи</a>
+    <a href="{{ url_for('reports_page') }}">Отчёты</a>
+    <a href="{{ url_for('settings_page') }}">Настройки</a>
+    <a href="{{ url_for('admin_page') }}">Администрирование</a>
+  </nav>
+  {% set home = (teams | selectattr("Id", "equalto", match.HomeTeamId) | list | first) %}
+  {% set away = (teams | selectattr("Id", "equalto", match.AwayTeamId) | list | first) %}
+  {% set starters = lineups | selectattr("LineupRole", "equalto", "starter") | list %}
+  {% set substitutes = lineups | selectattr("LineupRole", "equalto", "substitute") | list %}
+  {% set selected_action = (actions | selectattr("Id", "equalto", selected_event.ActionId) | list | first) if selected_event else none %}
+  <div class="tagging-page">
+    <div class="tagging-toolbar">
+      <div class="tagging-toolbar__meta">
+        <span class="toolbar-label">Матч</span>
+        <span class="toolbar-value">{{ home.Name if home else "?" }} — {{ away.Name if away else "?" }}</span>
+      </div>
+
+      <div class="tagging-toolbar__meta">
+        <span class="toolbar-label">Тайм{% if selected_event %} <span class="toolbar-hint">(выбранное событие)</span>{% endif %}</span>
+        <form class="half-selector" method="post" action="{{ url_for('tagging_set_period', match_id=match.Id) }}">
+          <label>
+            <input type="radio" name="period" value="1" {% if current_period == 1 %}checked{% endif %} onchange="this.form.submit()" /> 1-й
+          </label>
+          <label>
+            <input type="radio" name="period" value="2" {% if current_period == 2 %}checked{% endif %} onchange="this.form.submit()" /> 2-й
+          </label>
+        </form>
+      </div>
+
+      <div class="tagging-toolbar__meta">
+        <span class="toolbar-label">Видео</span>
+        <span class="toolbar-value" id="video-time-label">0-00</span>
+      </div>
+
+      <form id="capture-form" class="tagging-toolbar__capture" method="post" action="{{ url_for('tagging_capture', match_id=match.Id) }}">
+        <input type="hidden" name="timestampSec" id="timestamp-sec" value="0" />
+        <input type="hidden" name="period" id="capture-period" value="{{ current_period }}" />
+        <button type="submit" class="btn-capture">НОВОЕ СОБЫТИЕ</button>
+      </form>
+
+      <details class="tagging-toolbar__menu">
+        <summary class="tagging-menu-trigger">⋮ Меню</summary>
+        <div class="tagging-menu-panel">
+          <a class="tagging-menu-link" href="{{ url_for('tagging_video', match_id=match.Id) }}" target="_blank">Открыть видео</a>
+          <a class="tagging-menu-link" href="{{ url_for('tagging_export_csv', match_id=match.Id) }}">Экспорт в CSV</a>
+          <form class="tagging-menu-import" method="post" action="{{ url_for('tagging_import_csv', match_id=match.Id) }}" enctype="multipart/form-data">
+            <label class="tagging-menu-label">Импорт CSV</label>
+            <input type="file" name="csvFile" accept=".csv,text/csv" required />
+            <div class="tagging-menu-import-mode">
+              <label><input type="radio" name="mode" value="append" checked /> Добавить</label>
+              <label><input type="radio" name="mode" value="replace" /> Заменить</label>
+            </div>
+            <button class="btn" type="submit">Импортировать</button>
+          </form>
+          <a class="tagging-menu-link" href="{{ url_for('match_setup', match_id=match.Id) }}">← Подготовка матча</a>
+        </div>
+      </details>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="tagging-toolbar__flash flash-messages">
+            {% for category, message in messages %}
+              <p class="flash flash-{{ category }}">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <div class="tagging-workspace">
+      <div class="tagging-input-col">
+        {% if not selected_event %}
+        <p class="status-bar">Сначала зафиксируйте время события или выберите строку в таймлайне.</p>
+        {% endif %}
+
+        <div class="card tagging-card">
+          <h3>1. Игрок / Команда</h3>
+          <p class="section-label">Основной состав</p>
+          <div class="grid-players">
+            {% for row in starters %}
+            {% set p = (players | selectattr("Id", "equalto", row.PlayerId) | list | first) %}
+            {% if p %}
+            <form method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}">
+              <input type="hidden" name="subjectType" value="player" />
+              <input type="hidden" name="playerId" value="{{ p.Id }}" />
+              <button type="submit" class="tag-btn player-btn {{ 'selected' if selected_event and selected_event.PlayerId == p.Id else '' }}" {% if not selected_event %}disabled{% endif %}>{{ p.Name }}</button>
+            </form>
+            {% endif %}
+            {% endfor %}
+          </div>
+          <p class="section-label">Замена</p>
+          <div class="grid-players">
+            {% for row in substitutes %}
+            {% set p = (players | selectattr("Id", "equalto", row.PlayerId) | list | first) %}
+            {% if p %}
+            <form method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}">
+              <input type="hidden" name="subjectType" value="player" />
+              <input type="hidden" name="playerId" value="{{ p.Id }}" />
+              <button type="submit" class="tag-btn player-btn substitute {{ 'selected' if selected_event and selected_event.PlayerId == p.Id else '' }}" {% if not selected_event %}disabled{% endif %}>{{ p.Name }}</button>
+            </form>
+            {% endif %}
+            {% endfor %}
+          </div>
+          <p class="section-label">Команда</p>
+          <div class="grid-players grid-players--teams">
+            {% for team in teams if team.Id in [match.HomeTeamId, match.AwayTeamId] %}
+            <form method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}">
+              <input type="hidden" name="subjectType" value="team" />
+              <input type="hidden" name="teamId" value="{{ team.Id }}" />
+              <button type="submit" class="tag-btn team-btn {{ 'selected' if selected_event and selected_event.TeamId == team.Id else '' }}" {% if not selected_event %}disabled{% endif %}>{{ team.Name }}</button>
+            </form>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="card tagging-card">
+          <h3>2. Действие</h3>
+          <div class="grid-actions">
+            {% for action in actions %}
+            <form method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}">
+              <input type="hidden" name="actionId" value="{{ action.Id }}" />
+              <button type="submit" class="tag-btn action-{{ action.ColorClass or 'handling' }} {{ 'selected' if selected_event and selected_event.ActionId == action.Id else '' }}" {% if not selected_event %}disabled{% endif %}>{{ action.Name }}</button>
+            </form>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if selected_action and selected_action.HasOutcome %}
+        <div class="card tagging-card tagging-card--compact">
+          <div class="grid-outcome">
+            <form method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}"><input type="hidden" name="outcome" value="Success" /><button class="tag-btn outcome-btn success" type="submit">SUCCESS</button></form>
+            <form method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}"><input type="hidden" name="outcome" value="Failure" /><button class="tag-btn outcome-btn failure" type="submit">FAILURE</button></form>
+            <form method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}"><input type="hidden" name="outcome" value="" /><button class="tag-btn outcome-btn none" type="submit">БЕЗ РЕЗУЛЬТАТА</button></form>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if selected_event %}
+        <div class="card tagging-card tagging-card--compact">
+          <h3>3. Комментарий</h3>
+          <div class="grid-comments">
+            {% if selected_action %}
+              {% for c in comments.get(selected_action.Id, []) %}
+              <form method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}">
+                <input type="hidden" name="comment" value="{{ ((selected_event.Comment or '') + ('; ' if selected_event.Comment else '') + c.Text) }}" />
+                <button class="tag-btn comment-preset-btn" type="submit">{{ c.Text }}</button>
+              </form>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <form class="form-row comment-form" method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}">
+            <input class="comment-input" name="comment" value="{{ selected_event.Comment or '' }}" placeholder="Ручной ввод..." />
+            <button class="btn btn-primary" type="submit">Сохранить</button>
+          </form>
+        </div>
+        {% endif %}
+
+        {% if selected_event %}
+        <div id="selected-event-meta" hidden data-timestamp-sec="{{ selected_event.TimestampSec }}" data-period="{{ selected_event.PeriodNumber }}"></div>
+        {% endif %}
+      </div>
+
+      <div class="tagging-timeline-col">
+        <div class="tagging-timeline-score match-score">
+          <div class="match-score__team">{{ home.Name if home else "?" }}</div>
+          <div class="match-score__values">{{ score.home }} : {{ score.away }}</div>
+          <div class="match-score__team">{{ away.Name if away else "?" }}</div>
+        </div>
+        {% include "tagging/_timeline.html" %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

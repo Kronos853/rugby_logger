@@ -1,0 +1,34 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Node (legacy React MVP)
+node_modules/
+dist/
+
+# OS / editor
+.DS_Store
+*.local
+Thumbs.db
+
+# Local database and backups (user data — export via /admin)
+*.db
+data/*.backup-*.db
+
+# User spreadsheets / imports
+*.xlsx
+*.xls
+
+# Early HTML prototypes (superseded by templates/)
+/analyse.html
+/control_panel.html
+/control_panel U-17.html
+/video_screen.html
+
+# Build / tooling artifacts
+tsconfig.tsbuildinfo
+scripts/_lazyweb_*

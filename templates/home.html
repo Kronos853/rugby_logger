@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Sports Video Logger</h1>
+<div class="card">
+  <h3>Режимы</h3>
+  <ul>
+    <li><a href="{{ url_for('templates_page') }}">Справочники — шаблоны спорта</a></li>
+    <li><a href="{{ url_for('teams_page') }}">Справочники — команды и игроки</a></li>
+    <li><a href="{{ url_for('squads_page') }}">Справочники — сохранённые составы</a></li>
+    <li><a href="{{ url_for('matches_page') }}">Матчи — создание и подготовка</a></li>
+    <li><a href="{{ url_for('admin_page') }}">Администрирование — резервная копия БД</a></li>
+  </ul>
+</div>
+<div class="card">
+  <h3>Разметка (два монитора)</h3>
+  <p class="muted">Откройте матч, затем запустите пульт на первом мониторе и видео на втором.</p>
+  <p><a href="{{ url_for('matches_page') }}">Перейти к матчам →</a></p>
+</div>
+{% endblock %}
+

@@ -1,0 +1,20 @@
+<div class="card" id="templates-table">
+  <table class="data-table">
+    <thead><tr><th>Название</th><th></th></tr></thead>
+    <tbody>
+      {% for t in templates %}
+      <tr>
+        <td>{{ t.Name }}</td>
+        <td>
+          <a href="{{ url_for('template_detail', template_id=t.Id) }}">Редактировать →</a>
+          |
+          <form method="post" action="{{ url_for('templates_delete', template_id=t.Id) }}" hx-post="{{ url_for('templates_delete', template_id=t.Id) }}" hx-target="#templates-table" hx-swap="outerHTML" style="display:inline;">
+            <button type="submit" class="btn btn-danger">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
