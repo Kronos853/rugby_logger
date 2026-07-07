@@ -1,0 +1,23 @@
+<div class="current-event-draft card tagging-card">
+  <div class="current-event-draft__header">
+    <h3 class="current-event-draft__title">ТЕКУЩЕЕ СОБЫТИЕ</h3>
+    {% if selected_event and draft_mode == 'edit' %}
+    <span class="current-event-draft__badge current-event-draft__badge--edit">РЕДАКТИРОВАНИЕ</span>
+    {% elif selected_event %}
+    <span class="current-event-draft__badge current-event-draft__badge--new">НОВОЕ</span>
+    {% endif %}
+  </div>
+
+  <div class="current-event-draft__summary">
+    <div class="current-event-draft__chips">
+      <span class="draft-chip">[Игрок: {{ draft_player_label }}]</span>
+      <span class="draft-chip">[Действие: {{ draft_action_label }}]</span>
+      <span class="draft-chip">[Результат: {{ draft_outcome_label }}]</span>
+    </div>
+    {% if selected_event %}
+    <div class="current-event-draft__time">Тайм: {{ selected_event.PeriodNumber }} • {{ selected_event.TimestampSec | format_time }}</div>
+    {% else %}
+    <div class="current-event-draft__time">Тайм: {{ current_period }} • —</div>
+    {% endif %}
+  </div>
+</div>

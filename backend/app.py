@@ -29,6 +29,24 @@ from .seed import copy_squad_to_match_lineup, ensure_seeded, seed_rugby_template
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
+def _tagging_event_subject_name(
+    selected_event: sqlite3.Row | None,
+    players: list[sqlite3.Row],
+    teams: list[sqlite3.Row],
+) -> str:
+    if not selected_event:
+        return "—"
+    player_id = selected_event["PlayerId"]
+    if player_id:
+        player = next((p for p in players if int(p["Id"]) == int(player_id)), None)
+        return str(player["Name"]) if player else "—"
+    team_id = selected_event["TeamId"]
+    if team_id:
+        team = next((t for t in teams if int(t["Id"]) == int(team_id)), None)
+        return str(team["Name"]) if team else "—"
+    return "—"
+
+
 def create_app() -> Flask:
     app = Flask(
         __name__,
@@ -555,6 +573,17 @@ def create_app() -> Flask:
         selected_event_id = session.get(f"selected_event_{match_id}")
         selected_event = next((e for e in events if int(e["Id"]) == selected_event_id), None)
         current_period = session.get(f"period_{match_id}", 1)
+        selected_action = (
+            next((a for a in actions if int(a["Id"]) == int(selected_event["ActionId"])), None)
+            if selected_event and selected_event["ActionId"]
+            else None
+        )
+        draft_mode = session.get(f"draft_mode_{match_id}", "new" if selected_event else None)
+        if selected_event and draft_mode not in ("new", "edit"):
+            draft_mode = "edit"
+        draft_outcome = "—"
+        if selected_event and selected_event["Outcome"]:
+            draft_outcome = str(selected_event["Outcome"])
         return {
             "match": match,
             "teams": teams,
@@ -568,7 +597,12 @@ def create_app() -> Flask:
             "score": score,
             "selected_event_id": selected_event_id,
             "selected_event": selected_event,
+            "selected_action": selected_action,
             "current_period": current_period,
+            "draft_mode": draft_mode,
+            "draft_player_label": _tagging_event_subject_name(selected_event, players, teams),
+            "draft_action_label": selected_action["Name"] if selected_action else "—",
+            "draft_outcome_label": draft_outcome,
         }
 
     def _render_tagging_partials(match_id: int):
@@ -613,6 +647,7 @@ def create_app() -> Flask:
                 subject_type="player",
             )
         session[f"selected_event_{match_id}"] = event_id
+        session[f"draft_mode_{match_id}"] = "new"
         if request.headers.get("HX-Request") == "true":
             return _render_tagging_partials(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
@@ -649,6 +684,7 @@ def create_app() -> Flask:
         if row:
             session[f"period_{match_id}"] = int(row["PeriodNumber"])
         session[f"selected_event_{match_id}"] = event_id
+        session[f"draft_mode_{match_id}"] = "edit"
         if request.headers.get("HX-Request") == "true":
             return _render_tagging_partials(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
@@ -659,6 +695,7 @@ def create_app() -> Flask:
             repo.delete_event(conn, event_id)
         if session.get(f"selected_event_{match_id}") == event_id:
             session[f"selected_event_{match_id}"] = None
+            session.pop(f"draft_mode_{match_id}", None)
         if request.headers.get("HX-Request") == "true":
             return _render_tagging_partials(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
@@ -813,6 +850,81 @@ def create_app() -> Flask:
             rows=rows,
         )
 
+    def _report_player_breakdown_context(
+        conn: sqlite3.Connection,
+        action_id: int,
+        team_id: int,
+        date_from: str,
+        date_to: str,
+        *,
+        tournament_id: int | None,
+        match_id: int | None,
+    ) -> dict[str, object] | None:
+        action = repo.get_action(conn, action_id)
+        if not action:
+            return None
+        category = repo.get_category(conn, int(action["CategoryId"]))
+        rows = repo.get_report_player_detail(
+            conn,
+            action_id,
+            team_id,
+            date_from,
+            date_to,
+            tournament_id=tournament_id,
+            match_id=match_id,
+        )
+        match_label = None
+        if match_id:
+            match = repo.get_match(conn, match_id)
+            if match:
+                home = repo.get_team(conn, int(match["HomeTeamId"]))
+                away = repo.get_team(conn, int(match["AwayTeamId"]))
+                home_name = home["Name"] if home else "?"
+                away_name = away["Name"] if away else "?"
+                match_label = f"{match['MatchDate']} — {home_name} — {away_name}"
+        return {
+            "mode": "action-breakdown",
+            "action": action,
+            "category": category,
+            "rows": build_player_detail(rows, has_outcome=bool(action["HasOutcome"])),
+            "match_label": match_label,
+        }
+
+    @app.get("/reports/player-panel")
+    def reports_player_panel():
+        mode = request.args.get("mode", "empty")
+        if mode == "empty":
+            return render_template("_report_player_panel.html", mode="empty")
+
+        if mode != "action-breakdown":
+            return "", 400
+
+        action_id = request.args.get("actionId", type=int)
+        team_id = request.args.get("teamId", type=int)
+        date_from = request.args.get("dateFrom", "")
+        date_to = request.args.get("dateTo", "")
+        tournament_raw = request.args.get("tournamentId", "")
+        tournament_id = int(tournament_raw) if tournament_raw else None
+        match_id = request.args.get("matchId", type=int)
+
+        if not action_id or not team_id or not date_from or not date_to:
+            return "", 400
+
+        with db() as conn:
+            ctx = _report_player_breakdown_context(
+                conn,
+                action_id,
+                team_id,
+                date_from,
+                date_to,
+                tournament_id=tournament_id,
+                match_id=match_id,
+            )
+            if ctx is None:
+                return "", 404
+
+        return render_template("_report_player_panel.html", **ctx)
+
     @app.get("/reports/player-detail")
     def reports_player_detail():
         action_id = request.args.get("actionId", type=int)
@@ -830,10 +942,7 @@ def create_app() -> Flask:
             return "", 400
 
         with db() as conn:
-            action = repo.get_action(conn, action_id)
-            if not action:
-                return "", 404
-            rows = repo.get_report_player_detail(
+            ctx = _report_player_breakdown_context(
                 conn,
                 action_id,
                 subject_id,
@@ -842,12 +951,10 @@ def create_app() -> Flask:
                 tournament_id=tournament_id,
                 match_id=match_id,
             )
+            if ctx is None:
+                return "", 404
 
-        return render_template(
-            "_report_player_detail.html",
-            action=action,
-            rows=build_player_detail(rows, has_outcome=bool(action["HasOutcome"])),
-        )
+        return render_template("_report_player_panel.html", **ctx)
 
     # Settings
     @app.route("/settings", methods=["GET", "POST"])

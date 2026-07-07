@@ -1,60 +1,142 @@
 {% macro report_results(categories, report_ctx) %}
+
 {% if categories %}
+
   {% for category in categories %}
+
   <div class="report-category">
+
     <h4>{{ category.name }}</h4>
+
     <table class="data-table report-table">
+
       <thead>
+
         <tr>
+
           <th>Действие</th>
+
           <th>Всего</th>
+
           <th>Успех</th>
+
           <th>Неудача</th>
+
           <th>%</th>
+
           <th></th>
+
         </tr>
+
       </thead>
+
       <tbody>
+
         {% for action in category.actions %}
-        <tr>
+
+        <tr class="report-action-row" data-action-id="{{ action.action_id }}">
+
           <td>{{ action.name }}</td>
+
           {% if action.has_outcome %}
+
           <td>{{ action.total }}</td>
+
           <td>{{ action.success }}</td>
+
           <td>{{ action.failure }}</td>
+
           <td>{{ action.success_pct if action.success_pct is not none else "—" }}</td>
+
           {% else %}
+
           <td colspan="4">{{ action.total }}</td>
+
           {% endif %}
+
           <td class="report-drilldown-cell">
+
             {% if report_ctx.subject_type == 'team' %}
+
+            {% if report_ctx.use_player_panel %}
+
             <button
+
               class="btn report-player-toggle"
+
               type="button"
+
               aria-expanded="false"
-              data-url="{{ url_for('reports_player_detail', actionId=action.action_id, subjectType=report_ctx.subject_type, subjectId=report_ctx.subject_id, dateFrom=report_ctx.date_from, dateTo=report_ctx.date_to, tournamentId=report_ctx.tournament_id or '', matchId=report_ctx.match_id or '') }}"
-              data-target="player-{{ report_ctx.scope }}-{{ action.action_id }}"
-              onclick="toggleReportPlayer(this)"
+
+              data-action-id="{{ action.action_id }}"
+
+              data-url="{{ url_for('reports_player_panel', mode='action-breakdown', actionId=action.action_id, teamId=report_ctx.subject_id, dateFrom=report_ctx.date_from, dateTo=report_ctx.date_to, tournamentId=report_ctx.tournament_id or '', matchId=report_ctx.match_id or '') }}"
+
+              onclick="toggleReportPlayerPanel(this)"
+
             >По игрокам</button>
-            <div id="player-{{ report_ctx.scope }}-{{ action.action_id }}" data-open="0"></div>
-            {% endif %}
+
+            {% else %}
+
             <button
-              class="btn report-comment-toggle"
+
+              class="btn report-player-toggle"
+
               type="button"
+
               aria-expanded="false"
+
+              data-url="{{ url_for('reports_player_detail', actionId=action.action_id, subjectType=report_ctx.subject_type, subjectId=report_ctx.subject_id, dateFrom=report_ctx.date_from, dateTo=report_ctx.date_to, tournamentId=report_ctx.tournament_id or '', matchId=report_ctx.match_id or '') }}"
+
+              data-target="player-{{ report_ctx.scope }}-{{ action.action_id }}"
+
+              onclick="toggleReportPlayer(this)"
+
+            >По игрокам</button>
+
+            <div id="player-{{ report_ctx.scope }}-{{ action.action_id }}" data-open="0"></div>
+
+            {% endif %}
+
+            {% endif %}
+
+            <button
+
+              class="btn report-comment-toggle"
+
+              type="button"
+
+              aria-expanded="false"
+
               data-url="{{ url_for('reports_comment_detail', actionId=action.action_id, subjectType=report_ctx.subject_type, subjectId=report_ctx.subject_id, dateFrom=report_ctx.date_from, dateTo=report_ctx.date_to, tournamentId=report_ctx.tournament_id or '', matchId=report_ctx.match_id or '') }}"
+
               data-target="comment-{{ report_ctx.scope }}-{{ action.action_id }}"
+
               onclick="toggleReportComment(this)"
+
             >Комментарии</button>
+
             <div id="comment-{{ report_ctx.scope }}-{{ action.action_id }}" data-open="0"></div>
+
           </td>
+
         </tr>
+
         {% endfor %}
+
       </tbody>
+
     </table>
+
   </div>
+
   {% endfor %}
+
 {% else %}
+
   <p class="muted">Нет данных за выбранный период.</p>
+
 {% endif %}
+
 {% endmacro %}
+

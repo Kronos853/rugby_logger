@@ -24,7 +24,6 @@
   {% set away = (teams | selectattr("Id", "equalto", match.AwayTeamId) | list | first) %}
   {% set starters = lineups | selectattr("LineupRole", "equalto", "starter") | list %}
   {% set substitutes = lineups | selectattr("LineupRole", "equalto", "substitute") | list %}
-  {% set selected_action = (actions | selectattr("Id", "equalto", selected_event.ActionId) | list | first) if selected_event else none %}
   <div class="tagging-page">
     <div class="tagging-toolbar">
       <div class="tagging-toolbar__meta">
@@ -86,9 +85,7 @@
 
     <div class="tagging-workspace">
       <div class="tagging-input-col">
-        {% if not selected_event %}
-        <p class="status-bar">Сначала зафиксируйте время события или выберите строку в таймлайне.</p>
-        {% endif %}
+        {% include "tagging/_current_event_draft.html" %}
 
         <div class="card tagging-card">
           <h3>1. Игрок / Команда</h3>

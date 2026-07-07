@@ -1,0 +1,13 @@
+{% if mode == 'empty' %}
+<p class="report-player-panel__placeholder">Выберите действие</p>
+{% elif mode == 'action-breakdown' %}
+<div class="report-player-panel__breakdown">
+  {% if match_label %}
+  <p class="muted report-player-panel__context">{{ match_label }}</p>
+  {% endif %}
+  <p class="report-player-panel__action">
+    {% if category %}{{ category.Name }} — {% endif %}{{ action.Name }}
+  </p>
+  {% include "_report_player_detail.html" %}
+</div>
+{% endif %}

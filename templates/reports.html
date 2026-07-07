@@ -1,105 +1,316 @@
 {% extends "base.html" %}
+
 {% from "_report_results.html" import report_results %}
+
 {% block head %}
+
 <script src="{{ url_for('static', filename='reports.js') }}"></script>
+
 {% endblock %}
+
 {% block content %}
+
 <h1 class="page-title">Отчёты</h1>
+
 {% if primary_team_id and report_type == 'team' and team_id == primary_team_id %}
+
 <p class="muted">По умолчанию выбрана основная команда из <a href="{{ url_for('settings_page') }}">настроек</a>.</p>
+
 {% endif %}
 
+
+
 <div class="card">
-  <form method="post" action="{{ url_for('reports_page') }}">
+
+  <form id="reportForm" method="post" action="{{ url_for('reports_page') }}">
+
     <div class="form-row">
+
       <label>
+
         Тип отчёта
+
         <select name="reportType" id="reportType">
+
           <option value="team" {% if report_type == 'team' %}selected{% endif %}>Командный</option>
+
           <option value="individual" {% if report_type == 'individual' %}selected{% endif %}>Индивидуальный</option>
+
         </select>
+
       </label>
+
       <label id="teamSelectWrap"{% if report_type != 'team' %} hidden{% endif %}>
+
         Команда
+
         <select name="teamId">
+
           <option value="">—</option>
+
           {% for team in teams %}
+
           <option value="{{ team.Id }}" {% if team_id == team.Id %}selected{% endif %}>{{ team.Name }}</option>
+
           {% endfor %}
+
         </select>
+
       </label>
+
       <label id="playerSelectWrap"{% if report_type == 'team' %} hidden{% endif %}>
+
         Игрок
+
         <select name="playerId">
+
           <option value="">—</option>
+
           {% for player in players %}
+
           <option value="{{ player.Id }}" {% if player_id == player.Id %}selected{% endif %}>{{ player.Name }}</option>
+
           {% endfor %}
+
         </select>
+
       </label>
+
     </div>
+
     <div class="form-row">
+
       <label>
+
         С
+
         <input type="date" name="dateFrom" value="{{ date_from }}" required />
+
       </label>
+
       <label>
+
         По
+
         <input type="date" name="dateTo" value="{{ date_to }}" required />
+
       </label>
+
       <label>
+
         Турнир
+
         <select name="tournamentId">
+
           <option value="">Все турниры</option>
+
           {% for t in tournaments %}
+
           <option value="{{ t.Id }}" {% if tournament_id == t.Id %}selected{% endif %}>{{ t.Name }}</option>
+
           {% endfor %}
+
         </select>
+
       </label>
+
       <label>
+
         <input type="checkbox" name="byMatch" value="1" {% if by_match %}checked{% endif %} />
+
         В разрезе матчей
+
       </label>
+
       <button class="btn btn-primary" type="submit">Сформировать</button>
+
     </div>
+
   </form>
+
 </div>
+
+
 
 {% if generated %}
-<div class="card">
-  <h3>Результаты</h3>
-  {% if by_match and report_sections is not none %}
-    {% if report_sections %}
-      {% for section in report_sections %}
-      <div class="report-match-section">
-        <h3>{{ section.match_date }} — {{ section.label }}</h3>
+
+{% if report_type == 'team' %}
+
+<div class="card report-split-card">
+
+  <div class="report-split">
+
+    <div class="report-split__team">
+
+      <h3 class="report-split__heading">Отчёт команды</h3>
+
+      {% if by_match and report_sections is not none %}
+
+        {% if report_sections %}
+
+          {% for section in report_sections %}
+
+          <div class="report-match-section">
+
+            <h3>{{ section.match_date }} — {{ section.label }}</h3>
+
+            {% set report_ctx = {
+
+              'subject_type': 'team',
+
+              'subject_id': team_id,
+
+              'date_from': date_from,
+
+              'date_to': date_to,
+
+              'tournament_id': tournament_id,
+
+              'match_id': section.match_id,
+
+              'scope': 'm' ~ section.match_id,
+
+              'use_player_panel': true
+
+            } %}
+
+            {{ report_results(section.categories, report_ctx) }}
+
+          </div>
+
+          {% endfor %}
+
+        {% else %}
+
+          <p class="muted">Нет данных за выбранный период.</p>
+
+        {% endif %}
+
+      {% else %}
+
         {% set report_ctx = {
-          'subject_type': 'team' if report_type == 'team' else 'player',
-          'subject_id': team_id if report_type == 'team' else player_id,
+
+          'subject_type': 'team',
+
+          'subject_id': team_id,
+
           'date_from': date_from,
+
           'date_to': date_to,
+
           'tournament_id': tournament_id,
-          'match_id': section.match_id,
-          'scope': 'm' ~ section.match_id
+
+          'match_id': none,
+
+          'scope': 'summary',
+
+          'use_player_panel': true
+
         } %}
-        {{ report_results(section.categories, report_ctx) }}
+
+        {{ report_results(report_summary, report_ctx) }}
+
+      {% endif %}
+
+    </div>
+
+    <div class="report-split__player">
+
+      <h3 class="report-split__heading">Панель игрока</h3>
+
+      <div id="report-player-panel" class="report-player-panel" data-empty-url="{{ url_for('reports_player_panel', mode='empty') }}">
+
+        {% with mode='empty' %}
+        {% include "_report_player_panel.html" %}
+        {% endwith %}
+
       </div>
-      {% endfor %}
-    {% else %}
-      <p class="muted">Нет данных за выбранный период.</p>
-    {% endif %}
-  {% else %}
-    {% set report_ctx = {
-      'subject_type': 'team' if report_type == 'team' else 'player',
-      'subject_id': team_id if report_type == 'team' else player_id,
-      'date_from': date_from,
-      'date_to': date_to,
-      'tournament_id': tournament_id,
-      'match_id': none,
-      'scope': 'summary'
-    } %}
-    {{ report_results(report_summary, report_ctx) }}
-  {% endif %}
+
+    </div>
+
+  </div>
+
 </div>
+
+{% else %}
+
+<div class="card">
+
+  <h3>Результаты</h3>
+
+  {% if by_match and report_sections is not none %}
+
+    {% if report_sections %}
+
+      {% for section in report_sections %}
+
+      <div class="report-match-section">
+
+        <h3>{{ section.match_date }} — {{ section.label }}</h3>
+
+        {% set report_ctx = {
+
+          'subject_type': 'player',
+
+          'subject_id': player_id,
+
+          'date_from': date_from,
+
+          'date_to': date_to,
+
+          'tournament_id': tournament_id,
+
+          'match_id': section.match_id,
+
+          'scope': 'm' ~ section.match_id,
+
+          'use_player_panel': false
+
+        } %}
+
+        {{ report_results(section.categories, report_ctx) }}
+
+      </div>
+
+      {% endfor %}
+
+    {% else %}
+
+      <p class="muted">Нет данных за выбранный период.</p>
+
+    {% endif %}
+
+  {% else %}
+
+    {% set report_ctx = {
+
+      'subject_type': 'player',
+
+      'subject_id': player_id,
+
+      'date_from': date_from,
+
+      'date_to': date_to,
+
+      'tournament_id': tournament_id,
+
+      'match_id': none,
+
+      'scope': 'summary',
+
+      'use_player_panel': false
+
+    } %}
+
+    {{ report_results(report_summary, report_ctx) }}
+
+  {% endif %}
+
+</div>
+
 {% endif %}
+
+{% endif %}
+
 {% endblock %}
+
