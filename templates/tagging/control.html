@@ -87,7 +87,11 @@
       <div class="tagging-input-col">
         {% include "tagging/_current_event_draft.html" %}
 
-        <div class="card tagging-card">
+        {% if scroll_focus %}
+        <div id="tagging-scroll-focus" data-target="{{ scroll_focus }}" hidden></div>
+        {% endif %}
+
+        <div class="card tagging-card tagging-step" id="tagging-step-player">
           <h3>1. Игрок / Команда</h3>
           <p class="section-label">Основной состав</p>
           <div class="grid-players">
@@ -127,7 +131,7 @@
           </div>
         </div>
 
-        <div class="card tagging-card">
+        <div class="card tagging-card tagging-step" id="tagging-step-action">
           <h3>2. Действие</h3>
           <div class="grid-actions">
             {% for action in actions %}
@@ -140,7 +144,7 @@
         </div>
 
         {% if selected_action and selected_action.HasOutcome %}
-        <div class="card tagging-card tagging-card--compact">
+        <div class="card tagging-card tagging-card--compact tagging-step" id="tagging-step-outcome">
           <div class="grid-outcome">
             <form method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}"><input type="hidden" name="outcome" value="Success" /><button class="tag-btn outcome-btn success" type="submit">SUCCESS</button></form>
             <form method="post" action="{{ url_for('tagging_update_event', match_id=match.Id) }}"><input type="hidden" name="outcome" value="Failure" /><button class="tag-btn outcome-btn failure" type="submit">FAILURE</button></form>
@@ -150,7 +154,7 @@
         {% endif %}
 
         {% if selected_event %}
-        <div class="card tagging-card tagging-card--compact">
+        <div class="card tagging-card tagging-card--compact tagging-step" id="tagging-step-comment">
           <h3>3. Комментарий</h3>
           <div class="grid-comments">
             {% if selected_action %}

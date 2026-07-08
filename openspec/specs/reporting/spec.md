@@ -156,6 +156,11 @@ The system SHALL allow users to expand any action row in a **team** report to se
 - **WHEN** a player has no events for the selected action in the filtered period
 - **THEN** that player does not appear in the breakdown
 
+#### Scenario: Player breakdown sorted by total descending
+- **WHEN** the player breakdown table is displayed in the player panel
+- **THEN** rows are ordered by the total count column ("Всего" or "Кол-во") in descending order
+- **AND** rows with equal totals are ordered alphabetically by subject name
+
 ### Requirement: Default Primary Team in Team Report
 The system SHALL pre-select the configured primary team when opening the reports page with team report type.
 

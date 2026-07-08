@@ -15,6 +15,12 @@ dist/
 *.local
 Thumbs.db
 
+# Cursor IDE / agent tooling (local, not part of the app)
+.cursor/
+
+# OpenSpec CLI metadata per change folder
+**/.openspec.yaml
+
 # Local database and backups (user data — export via /admin)
 *.db
 data/*.backup-*.db

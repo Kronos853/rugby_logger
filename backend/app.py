@@ -47,6 +47,36 @@ def _tagging_event_subject_name(
     return "—"
 
 
+def _tagging_scroll_focus_incomplete(
+    selected_event: sqlite3.Row | None,
+    selected_action: sqlite3.Row | None,
+) -> str | None:
+    if not selected_event:
+        return None
+    if not selected_event["PlayerId"] and not selected_event["TeamId"]:
+        return "player"
+    if not selected_event["ActionId"]:
+        return "action"
+    if selected_action and selected_action["HasOutcome"] and selected_event["Outcome"] is None:
+        return "outcome"
+    return None
+
+
+def _tagging_scroll_focus_after_update(
+    form,
+    selected_action: sqlite3.Row | None,
+) -> str | None:
+    if form.get("subjectType"):
+        return "action"
+    if form.get("actionId"):
+        if selected_action and selected_action["HasOutcome"]:
+            return "outcome"
+        return "comment"
+    if "outcome" in form:
+        return "comment"
+    return None
+
+
 def create_app() -> Flask:
     app = Flask(
         __name__,
@@ -584,6 +614,7 @@ def create_app() -> Flask:
         draft_outcome = "—"
         if selected_event and selected_event["Outcome"]:
             draft_outcome = str(selected_event["Outcome"])
+        scroll_focus = session.pop(f"scroll_focus_{match_id}", None)
         return {
             "match": match,
             "teams": teams,
@@ -603,6 +634,7 @@ def create_app() -> Flask:
             "draft_player_label": _tagging_event_subject_name(selected_event, players, teams),
             "draft_action_label": selected_action["Name"] if selected_action else "—",
             "draft_outcome_label": draft_outcome,
+            "scroll_focus": scroll_focus,
         }
 
     def _render_tagging_partials(match_id: int):
@@ -648,6 +680,7 @@ def create_app() -> Flask:
             )
         session[f"selected_event_{match_id}"] = event_id
         session[f"draft_mode_{match_id}"] = "new"
+        session[f"scroll_focus_{match_id}"] = "player"
         if request.headers.get("HX-Request") == "true":
             return _render_tagging_partials(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
@@ -670,6 +703,14 @@ def create_app() -> Flask:
                 outcome=request.form.get("outcome"),
                 comment=request.form.get("comment"),
             )
+            updated = conn.execute("SELECT * FROM Event WHERE Id = ?", (int(event_id),)).fetchone()
+            action_id = request.form.get("actionId", type=int) or (int(updated["ActionId"]) if updated and updated["ActionId"] else None)
+            selected_action = None
+            if action_id:
+                selected_action = conn.execute("SELECT * FROM Action WHERE Id = ?", (action_id,)).fetchone()
+        focus = _tagging_scroll_focus_after_update(request.form, selected_action)
+        if focus:
+            session[f"scroll_focus_{match_id}"] = focus
         if request.headers.get("HX-Request") == "true":
             return _render_tagging_partials(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
@@ -681,10 +722,23 @@ def create_app() -> Flask:
                 "SELECT PeriodNumber FROM Event WHERE Id = ? AND MatchId = ?",
                 (event_id, match_id),
             ).fetchone()
+            selected_event = conn.execute(
+                "SELECT * FROM Event WHERE Id = ? AND MatchId = ?",
+                (event_id, match_id),
+            ).fetchone()
+            selected_action = None
+            if selected_event and selected_event["ActionId"]:
+                selected_action = conn.execute(
+                    "SELECT * FROM Action WHERE Id = ?",
+                    (int(selected_event["ActionId"]),),
+                ).fetchone()
         if row:
             session[f"period_{match_id}"] = int(row["PeriodNumber"])
         session[f"selected_event_{match_id}"] = event_id
         session[f"draft_mode_{match_id}"] = "edit"
+        focus = _tagging_scroll_focus_incomplete(selected_event, selected_action)
+        if focus:
+            session[f"scroll_focus_{match_id}"] = focus
         if request.headers.get("HX-Request") == "true":
             return _render_tagging_partials(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))

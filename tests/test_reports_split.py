@@ -110,6 +110,98 @@ class ReportsSplitTests(unittest.TestCase):
         self.assertIn("TEST_Player", html)
         self.assertIn("report-player-table", html)
 
+    def test_player_breakdown_sorted_by_total_desc(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            match_row = conn.execute(
+                "SELECT MatchId FROM Event WHERE PlayerId = ? LIMIT 1",
+                (self.player_id,),
+            ).fetchone()
+            assert match_row is not None
+            match_id = int(match_row["MatchId"])
+            top_id = repo.create_player(conn, self.team_id, "TEST_Zulu", None)
+            low_id = repo.create_player(conn, self.team_id, "TEST_Alpha", None)
+            for _ in range(3):
+                repo.create_event(
+                    conn,
+                    match_id,
+                    1,
+                    0,
+                    "player",
+                    player_id=top_id,
+                    action_id=self.action_id,
+                    outcome="Success",
+                )
+            repo.create_event(
+                conn,
+                match_id,
+                1,
+                0,
+                "player",
+                player_id=low_id,
+                action_id=self.action_id,
+                outcome="Success",
+            )
+        finally:
+            conn.close()
+
+        resp = self.client.get(
+            "/reports/player-panel",
+            query_string={
+                "mode": "action-breakdown",
+                "actionId": self.action_id,
+                "teamId": self.team_id,
+                "dateFrom": "2026-01-01",
+                "dateTo": "2026-12-31",
+            },
+        )
+        html = resp.get_data(as_text=True)
+        zulu_pos = html.index("TEST_Zulu")
+        alpha_pos = html.index("TEST_Alpha")
+        player_pos = html.index("TEST_Player")
+        self.assertLess(zulu_pos, alpha_pos)
+        self.assertLess(zulu_pos, player_pos)
+
+    def test_player_breakdown_tie_sorted_by_name(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            match_row = conn.execute(
+                "SELECT MatchId FROM Event WHERE PlayerId = ? LIMIT 1",
+                (self.player_id,),
+            ).fetchone()
+            assert match_row is not None
+            match_id = int(match_row["MatchId"])
+            conn.execute("DELETE FROM Event")
+            beta_id = repo.create_player(conn, self.team_id, "TEST_Beta", None)
+            alpha_id = repo.create_player(conn, self.team_id, "TEST_Alpha", None)
+            for player_id in (beta_id, alpha_id):
+                for _ in range(2):
+                    repo.create_event(
+                        conn,
+                        match_id,
+                        1,
+                        0,
+                        "player",
+                        player_id=player_id,
+                        action_id=self.action_id,
+                        outcome="Success",
+                    )
+        finally:
+            conn.close()
+
+        resp = self.client.get(
+            "/reports/player-panel",
+            query_string={
+                "mode": "action-breakdown",
+                "actionId": self.action_id,
+                "teamId": self.team_id,
+                "dateFrom": "2026-01-01",
+                "dateTo": "2026-12-31",
+            },
+        )
+        html = resp.get_data(as_text=True)
+        self.assertLess(html.index("TEST_Alpha"), html.index("TEST_Beta"))
+
 
 if __name__ == "__main__":
     unittest.main()

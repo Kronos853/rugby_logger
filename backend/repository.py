@@ -805,7 +805,7 @@ def get_report_player_detail(
           {match_sql}
         GROUP BY e.SubjectType, e.PlayerId, e.TeamId
         HAVING COUNT(*) > 0
-        ORDER BY SubjectLabel
+        ORDER BY Total DESC, SubjectLabel ASC
         """,
         tuple(params),
     )

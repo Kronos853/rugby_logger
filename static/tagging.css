@@ -257,6 +257,10 @@ body.tagging-control {
   padding-top: 2px;
 }
 
+.tagging-step {
+  scroll-margin-top: 72px;
+}
+
 .tagging-timeline-col {
   flex: 1;
   display: flex;

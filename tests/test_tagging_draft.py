@@ -93,6 +93,20 @@ class TaggingDraftTests(unittest.TestCase):
         html = resp.get_data(as_text=True)
         self.assertIn("НОВОЕ", html)
         self.assertIn("Тайм: 2 • 6-07", html)
+        self.assertIn('data-target="player"', html)
+
+    def test_player_select_scroll_focus_action(self) -> None:
+        self.client.post(
+            f"/tagging/{self.match_id}/capture",
+            data={"timestampSec": "100", "period": "1"},
+        )
+        resp = self.client.post(
+            f"/tagging/{self.match_id}/event/update",
+            data={"subjectType": "player", "playerId": str(self.player_id)},
+            follow_redirects=True,
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('data-target="action"', resp.get_data(as_text=True))
 
     def test_timeline_select_shows_edit_badge(self) -> None:
         conn = connect(self.db_path)
