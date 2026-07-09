@@ -7,7 +7,6 @@
   const timestampInput = document.getElementById("timestamp-sec");
   const timeLabel = document.getElementById("video-time-label");
   const capturePeriodInput = document.getElementById("capture-period");
-  const periodRadios = document.querySelectorAll('form.half-selector input[name="period"]');
 
   function formatTimestamp(seconds) {
     const total = Math.max(0, Math.floor(Number(seconds) || 0));
@@ -34,34 +33,63 @@
     send({ type: "SEEK", time: sec });
   }
 
-  periodRadios.forEach((radio) => {
-    radio.addEventListener("change", syncCapturePeriod);
-  });
-  syncCapturePeriod();
+  function initTaggingTimeline() {
+    document.querySelectorAll("form.timeline-delete-form").forEach((form) => {
+      if (form.dataset.timelineBound === "1") return;
+      form.dataset.timelineBound = "1";
+      form.addEventListener("submit", (e) => {
+        if (!window.confirm("Удалить запись?")) {
+          e.preventDefault();
+          if (window.appScrollRestore) window.appScrollRestore.clear();
+        }
+      });
+    });
 
-  document.querySelectorAll("form.timeline-delete-form").forEach((form) => {
-    form.addEventListener("submit", (e) => {
-      if (!window.confirm("Удалить запись?")) {
-        e.preventDefault();
-        if (window.appScrollRestore) window.appScrollRestore.clear();
+    document.querySelectorAll("tr.timeline-row").forEach((row) => {
+      if (row.dataset.timelineBound === "1") return;
+      row.dataset.timelineBound = "1";
+      row.addEventListener("click", (e) => {
+        if (e.target.closest("button, a, input, label, form")) return;
+        const form = row.querySelector("form.timeline-select-form");
+        if (form) form.requestSubmit();
+      });
+    });
+
+    const selectedMeta = document.getElementById("selected-event-meta");
+    if (selectedMeta) {
+      applyVideoTime(selectedMeta.dataset.timestampSec);
+      const period = selectedMeta.dataset.period;
+      if (period) {
+        const radio = document.querySelector(
+          `form.half-selector input[name="period"][value="${period}"]`
+        );
+        if (radio) {
+          radio.checked = true;
+          syncCapturePeriod();
+        }
       }
-    });
-  });
-
-  document.querySelectorAll("tr.timeline-row").forEach((row) => {
-    row.addEventListener("click", (e) => {
-      if (e.target.closest("button, a, input, label, form")) return;
-      const form = row.querySelector("form.timeline-select-form");
-      if (form) form.requestSubmit();
-    });
-  });
-
-  const selectedMeta = document.getElementById("selected-event-meta");
-  if (selectedMeta) {
-    applyVideoTime(selectedMeta.dataset.timestampSec);
+    }
   }
 
-  syncCapturePeriod();
+  window.initTaggingTimeline = initTaggingTimeline;
+
+  function initTaggingControl() {
+    document.querySelectorAll('form.half-selector input[name="period"]').forEach((radio) => {
+      if (radio.dataset.periodBound === "1") return;
+      radio.dataset.periodBound = "1";
+      radio.addEventListener("change", syncCapturePeriod);
+    });
+    syncCapturePeriod();
+    initTaggingTimeline();
+  }
+
+  initTaggingControl();
+
+  if (document.body.classList.contains("tagging-control")) {
+    document.body.addEventListener("htmx:afterSettle", () => {
+      initTaggingTimeline();
+    });
+  }
 
   if (video && fileInput) {
     fileInput.addEventListener("change", (e) => {
@@ -128,4 +156,3 @@
     };
   }
 })();
-

@@ -2,9 +2,7 @@
 
 ## Purpose
 Built-in statistical reports for team and individual performance over a date range.
-
 ## Requirements
-
 ### Requirement: Reporting Page
 The system SHALL provide a dedicated reports page accessible from the main navigation.
 
@@ -171,3 +169,4 @@ The system SHALL pre-select the configured primary team when opening the reports
 #### Scenario: User overrides primary team
 - **WHEN** the user selects a different team in the report form and submits
 - **THEN** the report is generated for the selected team, not the primary team default
+

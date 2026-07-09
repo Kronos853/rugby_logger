@@ -59,11 +59,18 @@ The system SHALL store in-progress tagging events in the database immediately up
 
 #### Scenario: Capture creates draft event
 - **WHEN** the user clicks capture timestamp on the control panel
-- **THEN** the server creates an Event row with match, period, and timestamp and returns updated timeline HTML
+- **THEN** the server creates an Event row with match, period, and timestamp
+- **AND** returns an HTMX partial update without a full page reload
 
 #### Scenario: Incremental field updates
 - **WHEN** the user selects a player, team, action, or outcome on the control panel
-- **THEN** the server updates the selected draft event via HTMX and returns updated UI fragments (timeline, score, selection state)
+- **THEN** the server updates the selected draft event via HTMX
+- **AND** returns updated UI fragments for the input column (selection state, draft panel, conditional steps), timeline, and score
+- **AND** does not reload the toolbar or main navigation
+
+#### Scenario: HTMX fallback to full page
+- **WHEN** a tagging form is submitted without the HTMX request header
+- **THEN** the server responds with a redirect to the control panel as before
 
 ### Requirement: Client-Side Video Synchronization
 The system SHALL use browser JavaScript (not HTMX) for video file playback and cross-window synchronization between the control panel and video player pages.
@@ -105,14 +112,14 @@ The system SHALL display the event timeline simultaneously with the input contro
 
 #### Scenario: Timeline scroll position preserved on row select
 - **WHEN** the user has scrolled the timeline to a position other than the default
-- **AND** the user selects a timeline row (event) triggering a page reload
-- **THEN** the timeline vertical scroll position is restored to the same position after reload
+- **AND** the user selects a timeline row (event) triggering an HTMX update
+- **THEN** the timeline vertical scroll position is restored to the same position after the swap
 - **AND** the user is not jumped to the top or bottom of the event list
 
 #### Scenario: Timeline scroll position preserved on event update
 - **WHEN** the user has scrolled the timeline to a position other than the default
 - **AND** the user updates the selected event via input controls (player, action, outcome, comment)
-- **THEN** the timeline vertical scroll position is restored after the page reload
+- **THEN** the timeline vertical scroll position is restored after the HTMX swap
 
 ### Requirement: Tagging Page Viewport Layout
 The tagging control panel SHALL use a fixed-height viewport layout occupying the full browser window height.
@@ -194,5 +201,26 @@ The tagging control panel SHALL automatically scroll the input column to the nex
 - **THEN** the input column scrolls to the first missing required step
 
 #### Scenario: Scroll focus overrides scroll restore
-- **WHEN** the server signals a scroll focus target for the current page load
-- **THEN** the input column scroll position is set to that step instead of restoring the previous scroll position from session storage
+- **WHEN** the server signals a scroll focus target in the HTMX response
+- **THEN** the input column scroll position is set to that step instead of restoring the previous scroll position
+
+### Requirement: HTMX on Tagging Control Panel
+The tagging control panel SHALL load the HTMX library and use partial HTML swaps for input and timeline updates instead of full page reloads on routine tagging actions.
+
+#### Scenario: HTMX loaded on control panel
+- **WHEN** the user opens the tagging control panel
+- **THEN** the HTMX script is available on the page
+
+#### Scenario: Input forms use HTMX
+- **WHEN** the user submits a player, action, outcome, or comment form in the input column
+- **THEN** the request is sent via HTMX partial update
+- **AND** the toolbar video time label remains unchanged without re-render
+
+#### Scenario: Capture uses HTMX
+- **WHEN** the user clicks "НОВОЕ СОБЫТИЕ"
+- **THEN** the capture request is sent via HTMX partial update
+- **AND** the input column and timeline update without a full page reload
+
+#### Scenario: Period switch uses HTMX
+- **WHEN** the user changes the match period via the toolbar half selector
+- **THEN** the update is sent via HTMX partial update without a full page reload

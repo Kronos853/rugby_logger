@@ -637,12 +637,12 @@ def create_app() -> Flask:
             "scroll_focus": scroll_focus,
         }
 
-    def _render_tagging_partials(match_id: int):
+    def _render_tagging_htmx_response(match_id: int):
         with db() as conn:
             context = _load_tagging_context(conn, match_id)
             if context is None:
                 return "", 404
-        return render_template("tagging/_htmx_refresh.html", **context)
+        return render_template("tagging/_htmx_swap.html", **context)
 
     @app.post("/tagging/<int:match_id>/set-period")
     def tagging_set_period(match_id: int):
@@ -653,6 +653,8 @@ def create_app() -> Flask:
             if event_id:
                 with db() as conn:
                     repo.update_event(conn, int(event_id), period_number=period)
+        if request.headers.get("HX-Request") == "true":
+            return _render_tagging_htmx_response(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
 
     @app.get("/tagging/<int:match_id>/control")
@@ -682,7 +684,7 @@ def create_app() -> Flask:
         session[f"draft_mode_{match_id}"] = "new"
         session[f"scroll_focus_{match_id}"] = "player"
         if request.headers.get("HX-Request") == "true":
-            return _render_tagging_partials(match_id)
+            return _render_tagging_htmx_response(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
 
     @app.post("/tagging/<int:match_id>/event/update")
@@ -712,7 +714,7 @@ def create_app() -> Flask:
         if focus:
             session[f"scroll_focus_{match_id}"] = focus
         if request.headers.get("HX-Request") == "true":
-            return _render_tagging_partials(match_id)
+            return _render_tagging_htmx_response(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
 
     @app.post("/tagging/<int:match_id>/event/<int:event_id>/select")
@@ -740,7 +742,7 @@ def create_app() -> Flask:
         if focus:
             session[f"scroll_focus_{match_id}"] = focus
         if request.headers.get("HX-Request") == "true":
-            return _render_tagging_partials(match_id)
+            return _render_tagging_htmx_response(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
 
     @app.post("/tagging/<int:match_id>/event/<int:event_id>/delete")
@@ -751,7 +753,7 @@ def create_app() -> Flask:
             session[f"selected_event_{match_id}"] = None
             session.pop(f"draft_mode_{match_id}", None)
         if request.headers.get("HX-Request") == "true":
-            return _render_tagging_partials(match_id)
+            return _render_tagging_htmx_response(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
 
     @app.get("/tagging/<int:match_id>/video")
@@ -794,7 +796,7 @@ def create_app() -> Flask:
             else:
                 flash(f"Импортировано событий: {count}.", "ok")
         if request.headers.get("HX-Request") == "true":
-            return _render_tagging_partials(match_id)
+            return _render_tagging_htmx_response(match_id)
         return redirect(url_for("tagging_control", match_id=match_id))
 
     # Reports

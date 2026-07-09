@@ -26,8 +26,12 @@
           <td>{{ ev.Outcome or "—" }}</td>
           <td class="timeline-comment"{% if ev.Comment %} title="{{ ev.Comment }}"{% endif %}>{{ ev.Comment or "—" }}</td>
           <td class="timeline-actions">
-            <form class="timeline-select-form" method="post" action="{{ url_for('tagging_select_event', match_id=match.Id, event_id=ev.Id) }}"></form>
-            <form class="timeline-delete-form" method="post" action="{{ url_for('tagging_delete_event', match_id=match.Id, event_id=ev.Id) }}">
+            <form class="timeline-select-form" method="post" action="{{ url_for('tagging_select_event', match_id=match.Id, event_id=ev.Id) }}"
+                  hx-post="{{ url_for('tagging_select_event', match_id=match.Id, event_id=ev.Id) }}"
+                  hx-target="#tagging-input-col" hx-swap="innerHTML"></form>
+            <form class="timeline-delete-form" method="post" action="{{ url_for('tagging_delete_event', match_id=match.Id, event_id=ev.Id) }}"
+                  hx-post="{{ url_for('tagging_delete_event', match_id=match.Id, event_id=ev.Id) }}"
+                  hx-target="#tagging-input-col" hx-swap="innerHTML">
               <button class="btn btn-danger" type="submit" title="Удалить">✕</button>
             </form>
           </td>

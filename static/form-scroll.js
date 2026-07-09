@@ -125,7 +125,49 @@
   window.appScrollRestore = {
     save: saveScrollPosition,
     clear: () => sessionStorage.removeItem(SCROLL_KEY),
+    applyScrollFocus,
   };
+
+  let htmxScrollState = null;
+
+  function snapshotTaggingScroll() {
+    const input = inputScrollContainer();
+    const timeline = timelineScrollContainer();
+    return {
+      inputY: input ? input.scrollTop : 0,
+      timelineY: timeline ? timeline.scrollTop : 0,
+      timelineX: timeline ? timeline.scrollLeft : 0,
+    };
+  }
+
+  function restoreTaggingScrollAfterHtmx() {
+    const run = () => {
+      if (applyScrollFocus()) return;
+      if (!htmxScrollState) return;
+      const input = inputScrollContainer();
+      const timeline = timelineScrollContainer();
+      if (input) clampScroll(input, htmxScrollState.inputY);
+      if (timeline) {
+        clampScroll(timeline, htmxScrollState.timelineY, htmxScrollState.timelineX);
+      }
+    };
+    requestAnimationFrame(() => {
+      run();
+      requestAnimationFrame(run);
+    });
+  }
+
+  if (isTaggingControl()) {
+    document.body.addEventListener("htmx:beforeRequest", (e) => {
+      const elt = e.detail.elt;
+      if (!elt || !elt.closest(".tagging-page")) return;
+      htmxScrollState = snapshotTaggingScroll();
+    });
+    document.body.addEventListener("htmx:afterSettle", () => {
+      restoreTaggingScrollAfterHtmx();
+      htmxScrollState = null;
+    });
+  }
 
   document.querySelectorAll("form").forEach((form) => {
     if (!usesFullPageSubmit(form)) return;

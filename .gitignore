@@ -17,6 +17,15 @@ Thumbs.db
 
 # Cursor IDE / agent tooling (local, not part of the app)
 .cursor/
+.cursor/agents/
+.cursor/commands/
+.cursor/rules/
+.cursor/skills/
+.cursorrules
+
+# VS Code / Cursor workspace editor settings
+.vscode/
+*.code-workspace
 
 # OpenSpec CLI metadata per change folder
 **/.openspec.yaml
