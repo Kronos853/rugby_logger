@@ -49,7 +49,31 @@ class StatMetricsConstructorPageTests(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         html = resp.get_data(as_text=True)
         self.assertIn("Командные метрики", html)
+        self.assertIn('name="actionId"', html)
         self.assertIn('name="outcomeFilter"', html)
+
+    def test_stat_metrics_page_shows_opponent_checkbox_and_conditions(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            categories = repo.list_categories_by_template(conn, self.template_id)
+            handling = next(c for c in categories if c["Name"] == "Handling")
+            action_id = int(
+                repo.list_actions_by_category(conn, int(handling["Id"]))[0]["Id"]
+            )
+            metric_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_UI", action_id, "Success", "own"
+            )
+            repo.create_team_stat_condition(
+                conn, metric_id, action_id, "Failure", "opponent"
+            )
+        finally:
+            conn.close()
+        resp = self.client.get(f"/directories/templates/{self.template_id}/stat-metrics")
+        html = resp.get_data(as_text=True)
+        self.assertIn("Учитывать события противника", html)
+        self.assertIn("TEST_UI", html)
+        self.assertIn('name="countOpponent"', html)
+        self.assertIn("conditions/create", html)
 
     def test_template_detail_links_to_stat_metrics(self) -> None:
         resp = self.client.get(f"/directories/templates/{self.template_id}")
