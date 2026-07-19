@@ -54,7 +54,7 @@ base-ref: e18fdc90aa312992ba38c350b9fb863654c963f5
   - `TeamStatMetric(Id, SportTemplateId, Name, SortOrder)`
   - `TeamStatMetricCondition(Id, TeamStatMetricId, ActionId, OutcomeFilter, Perspective, SortOrder)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Replace `test_team_stat_metric_table_exists_after_ensure_db` in `tests/test_team_stat_metrics.py`:
 
@@ -91,13 +91,13 @@ Replace `test_team_stat_metric_table_exists_after_ensure_db` in `tests/test_team
             conn.close()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricSchemaTests.test_team_stat_metric_tables_exist_after_ensure_db -v`
 
 Expected: FAIL — `TeamStatMetricCondition` table not found; `TeamStatMetric` still has `ActionId`/`OutcomeFilter`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Replace `TeamStatMetric` in `docs/schema.sql`:
 
@@ -163,13 +163,13 @@ Extend `_pending_migrations` (after existing `TeamStatMetric` check):
         return True
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricSchemaTests.test_team_stat_metric_tables_exist_after_ensure_db -v`
 
 Expected: PASS on a fresh temp DB (migration task adds legacy upgrade path).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/schema.sql backend/db.py tests/test_team_stat_metrics.py

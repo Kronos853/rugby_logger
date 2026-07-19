@@ -1,6 +1,6 @@
 ## 1. Data model and migration
 
-- [ ] 1.1 Add `TeamStatMetricCondition` to `docs/schema.sql` and `backend/db.py`, and rebuild `TeamStatMetric` without legacy condition columns
+- [x] 1.1 Add `TeamStatMetricCondition` to `docs/schema.sql` and `backend/db.py`, and rebuild `TeamStatMetric` without legacy condition columns
 - [ ] 1.2 Migrate each existing metric to one equivalent `own` condition and add isolated migration regression tests
 
 ## 2. Repository behavior
