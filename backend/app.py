@@ -171,6 +171,10 @@ def create_app() -> Flask:
             if not template:
                 return redirect(url_for("templates_page"))
             metrics = repo.list_team_stat_metrics(conn, template_id)
+            metric_conditions = {
+                int(m["Id"]): repo.list_team_stat_metric_conditions(conn, int(m["Id"]))
+                for m in metrics
+            }
             categories = repo.list_categories_by_template(conn, template_id)
             actions = []
             for cat in categories:
@@ -186,6 +190,7 @@ def create_app() -> Flask:
             "templates/stat_metrics.html",
             template=template,
             metrics=metrics,
+            metric_conditions=metric_conditions,
             actions=actions,
         )
 
@@ -194,10 +199,13 @@ def create_app() -> Flask:
         name = request.form.get("name", "").strip()
         action_id = request.form.get("actionId", type=int)
         outcome_filter = request.form.get("outcomeFilter", "any")
+        perspective = "opponent" if request.form.get("countOpponent") else "own"
         if name and action_id:
             try:
                 with db() as conn:
-                    repo.create_team_stat_metric(conn, template_id, name, action_id, outcome_filter)
+                    repo.create_team_stat_metric(
+                        conn, template_id, name, action_id, outcome_filter, perspective
+                    )
             except ValueError as exc:
                 flash(str(exc), "error")
         return redirect(url_for("template_stat_metrics", template_id=template_id))
@@ -205,20 +213,84 @@ def create_app() -> Flask:
     @app.post("/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/update")
     def template_stat_metrics_update(template_id: int, metric_id: int):
         name = request.form.get("name", "").strip()
-        action_id = request.form.get("actionId", type=int)
-        outcome_filter = request.form.get("outcomeFilter", "any")
-        if name and action_id:
+        if name:
             try:
                 with db() as conn:
                     metric = repo.get_team_stat_metric(conn, metric_id)
                     if not metric or int(metric["SportTemplateId"]) != template_id:
                         flash("Метрика не найдена.", "error")
                     else:
-                        repo.update_team_stat_metric(
-                            conn, metric_id, name, action_id, outcome_filter
+                        repo.update_team_stat_metric(conn, metric_id, name)
+            except ValueError as exc:
+                flash(str(exc), "error")
+        return redirect(url_for("template_stat_metrics", template_id=template_id))
+
+    @app.post(
+        "/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/conditions/create"
+    )
+    def template_stat_metrics_condition_create(template_id: int, metric_id: int):
+        action_id = request.form.get("actionId", type=int)
+        outcome_filter = request.form.get("outcomeFilter", "any")
+        perspective = "opponent" if request.form.get("countOpponent") else "own"
+        if action_id:
+            try:
+                with db() as conn:
+                    metric = repo.get_team_stat_metric(conn, metric_id)
+                    if not metric or int(metric["SportTemplateId"]) != template_id:
+                        flash("Метрика не найдена.", "error")
+                    else:
+                        repo.create_team_stat_condition(
+                            conn, metric_id, action_id, outcome_filter, perspective
                         )
             except ValueError as exc:
                 flash(str(exc), "error")
+        return redirect(url_for("template_stat_metrics", template_id=template_id))
+
+    @app.post(
+        "/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/conditions/<int:condition_id>/update"
+    )
+    def template_stat_metrics_condition_update(
+        template_id: int, metric_id: int, condition_id: int
+    ):
+        action_id = request.form.get("actionId", type=int)
+        outcome_filter = request.form.get("outcomeFilter", "any")
+        perspective = "opponent" if request.form.get("countOpponent") else "own"
+        if action_id:
+            try:
+                with db() as conn:
+                    metric = repo.get_team_stat_metric(conn, metric_id)
+                    condition = repo.get_team_stat_metric_condition(conn, condition_id)
+                    if (
+                        not metric
+                        or int(metric["SportTemplateId"]) != template_id
+                        or not condition
+                        or int(condition["TeamStatMetricId"]) != metric_id
+                    ):
+                        flash("Условие не найдено.", "error")
+                    else:
+                        repo.update_team_stat_condition(
+                            conn, condition_id, action_id, outcome_filter, perspective
+                        )
+            except ValueError as exc:
+                flash(str(exc), "error")
+        return redirect(url_for("template_stat_metrics", template_id=template_id))
+
+    @app.post(
+        "/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/conditions/<int:condition_id>/delete"
+    )
+    def template_stat_metrics_condition_delete(
+        template_id: int, metric_id: int, condition_id: int
+    ):
+        with db() as conn:
+            metric = repo.get_team_stat_metric(conn, metric_id)
+            condition = repo.get_team_stat_metric_condition(conn, condition_id)
+            if (
+                metric
+                and int(metric["SportTemplateId"]) == template_id
+                and condition
+                and int(condition["TeamStatMetricId"]) == metric_id
+            ):
+                repo.delete_team_stat_condition(conn, condition_id)
         return redirect(url_for("template_stat_metrics", template_id=template_id))
 
     @app.post("/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/delete")

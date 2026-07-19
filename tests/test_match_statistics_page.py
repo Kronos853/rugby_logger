@@ -29,6 +29,11 @@ class StatMetricsConstructorPageTests(unittest.TestCase):
             template = repo.get_sport_template_by_name(conn, "Регби-7")
             assert template is not None
             self.template_id = int(template["Id"])
+            categories = repo.list_categories_by_template(conn, self.template_id)
+            handling = next(c for c in categories if c["Name"] == "Handling")
+            self.action_id = int(
+                repo.list_actions_by_category(conn, int(handling["Id"]))[0]["Id"]
+            )
         finally:
             conn.close()
 
@@ -52,6 +57,27 @@ class StatMetricsConstructorPageTests(unittest.TestCase):
         html = resp.get_data(as_text=True)
         self.assertIn("/stat-metrics", html)
         self.assertIn("Командные метрики", html)
+
+    def test_create_metric_with_opponent_checkbox(self) -> None:
+        resp = self.client.post(
+            f"/directories/templates/{self.template_id}/stat-metrics/create",
+            data={
+                "name": "TEST_OpponentMetric",
+                "actionId": str(self.action_id),
+                "outcomeFilter": "Failure",
+                "countOpponent": "1",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(resp.status_code, 200)
+        conn = connect(self.db_path)
+        try:
+            metrics = repo.list_team_stat_metrics(conn, self.template_id)
+            metric = next(m for m in metrics if m["Name"] == "TEST_OpponentMetric")
+            conditions = repo.list_team_stat_metric_conditions(conn, int(metric["Id"]))
+            self.assertEqual(conditions[0]["Perspective"], "opponent")
+        finally:
+            conn.close()
 
 
 class MatchStatisticsPageTests(unittest.TestCase):
