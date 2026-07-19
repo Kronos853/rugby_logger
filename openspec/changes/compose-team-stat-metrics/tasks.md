@@ -8,7 +8,7 @@
 - [x] 2.1 Refactor metric CRUD and add condition list/create/update/delete APIs with template/action validation
 - [x] 2.2 Preserve metric ordering and deterministic condition insertion order, including auto-delete of a metric when its last condition is removed
 - [x] 2.3 Replace match aggregation with one composite own/opponent query and test sums, overlap, zeros, orphans, and transfer stability
-- [ ] 2.4 Update Action/Category delete safety to cascade affected conditions, preserve non-empty metrics, and remove empty metrics
+- [x] 2.4 Update Action/Category delete safety to cascade affected conditions, preserve non-empty metrics, and remove empty metrics
 
 ## 3. Metric constructor
 

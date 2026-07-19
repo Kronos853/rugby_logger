@@ -1078,7 +1078,7 @@ git commit -m "feat: sum composite own/opponent team stat conditions"
   - `_delete_empty_team_stat_metrics(conn) -> None`
   - Updated `delete_action` / `delete_category` — cascade conditions; remove metrics left with zero conditions; still block when events exist
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `TeamStatMetricDeleteSafetyTests`:
 
@@ -1121,13 +1121,13 @@ Add to `TeamStatMetricDeleteSafetyTests`:
 
 Update existing cascade test — still passes with new behavior.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricDeleteSafetyTests.test_cascade_only_affected_condition_keeps_composite_metric -v`
 
 Expected: FAIL — entire metric deleted instead of one condition.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 def delete_team_stat_conditions_by_action(conn: sqlite3.Connection, action_id: int) -> None:
@@ -1169,13 +1169,13 @@ def delete_team_stat_metrics_by_category(conn: sqlite3.Connection, category_id: 
 
 `delete_action` / `delete_category` bodies stay the same (they already call the `delete_team_stat_metrics_by_*` helpers).
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricDeleteSafetyTests -v`
 
 Expected: PASS (5 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/repository.py tests/test_team_stat_metrics.py
