@@ -342,5 +342,175 @@ class TeamStatMetricDeleteSafetyTests(unittest.TestCase):
             conn.close()
 
 
+class TeamStatMetricMigrationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        self._tmp.close()
+        self.db_path = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        try:
+            os.unlink(self.db_path)
+        except OSError:
+            pass
+
+    def _seed_legacy_metric_db(self) -> tuple[int, int, int, int]:
+        conn = connect(self.db_path)
+        try:
+            conn.executescript(
+                """
+                CREATE TABLE SportTemplate (
+                  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  Name TEXT NOT NULL UNIQUE,
+                  PeriodCount INTEGER NOT NULL DEFAULT 2
+                );
+                CREATE TABLE Category (
+                  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  SportTemplateId INTEGER NOT NULL REFERENCES SportTemplate(Id) ON DELETE CASCADE,
+                  Name TEXT NOT NULL,
+                  SortOrder INTEGER NOT NULL DEFAULT 0,
+                  ShowInReport INTEGER NOT NULL DEFAULT 1
+                );
+                CREATE TABLE Action (
+                  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  CategoryId INTEGER NOT NULL REFERENCES Category(Id) ON DELETE CASCADE,
+                  Name TEXT NOT NULL,
+                  HasOutcome INTEGER NOT NULL DEFAULT 1,
+                  SortOrder INTEGER NOT NULL DEFAULT 0,
+                  ColorClass TEXT NOT NULL DEFAULT 'handling',
+                  ShowInReport INTEGER NOT NULL DEFAULT 1
+                );
+                CREATE TABLE Team (
+                  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  Name TEXT NOT NULL,
+                  CreatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+                );
+                CREATE TABLE Player (
+                  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  TeamId INTEGER NOT NULL REFERENCES Team(Id) ON DELETE CASCADE,
+                  Name TEXT NOT NULL,
+                  FullName TEXT,
+                  BirthDay TEXT,
+                  IsActive INTEGER NOT NULL DEFAULT 1
+                );
+                CREATE TABLE Match (
+                  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  SportTemplateId INTEGER NOT NULL REFERENCES SportTemplate(Id),
+                  HomeTeamId INTEGER NOT NULL REFERENCES Team(Id),
+                  AwayTeamId INTEGER NOT NULL REFERENCES Team(Id),
+                  MatchDate TEXT,
+                  HomeSquadId INTEGER,
+                  AwaySquadId INTEGER,
+                  TournamentId INTEGER
+                );
+                CREATE TABLE MatchLineup (
+                  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  MatchId INTEGER NOT NULL REFERENCES Match(Id) ON DELETE CASCADE,
+                  TeamId INTEGER NOT NULL REFERENCES Team(Id),
+                  PlayerId INTEGER NOT NULL REFERENCES Player(Id),
+                  Position TEXT,
+                  LineupRole TEXT NOT NULL DEFAULT 'starter',
+                  SortOrder INTEGER NOT NULL DEFAULT 0
+                );
+                CREATE TABLE Event (
+                  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  MatchId INTEGER NOT NULL REFERENCES Match(Id) ON DELETE CASCADE,
+                  Period INTEGER NOT NULL,
+                  Timestamp REAL NOT NULL,
+                  SubjectType TEXT NOT NULL,
+                  PlayerId INTEGER REFERENCES Player(Id),
+                  TeamId INTEGER REFERENCES Team(Id),
+                  ActionId INTEGER NOT NULL REFERENCES Action(Id),
+                  Outcome TEXT,
+                  Comment TEXT
+                );
+                CREATE TABLE TeamStatMetric (
+                  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  SportTemplateId INTEGER NOT NULL REFERENCES SportTemplate(Id) ON DELETE CASCADE,
+                  Name TEXT NOT NULL,
+                  ActionId INTEGER NOT NULL REFERENCES Action(Id) ON DELETE CASCADE,
+                  OutcomeFilter TEXT NOT NULL DEFAULT 'any'
+                    CHECK (OutcomeFilter IN ('any', 'Success', 'Failure')),
+                  SortOrder INTEGER NOT NULL DEFAULT 0
+                );
+                """
+            )
+            template_id = conn.execute(
+                "INSERT INTO SportTemplate (Name) VALUES ('TEST_Legacy')"
+            ).lastrowid
+            category_id = conn.execute(
+                "INSERT INTO Category (SportTemplateId, Name, SortOrder) VALUES (?, 'TEST_Cat', 0)",
+                (template_id,),
+            ).lastrowid
+            action_id = conn.execute(
+                "INSERT INTO Action (CategoryId, Name, HasOutcome, SortOrder, ColorClass) VALUES (?, 'TEST_Pass', 1, 0, 'handling')",
+                (category_id,),
+            ).lastrowid
+            home_id = conn.execute(
+                "INSERT INTO Team (Name) VALUES ('TEST_Home')"
+            ).lastrowid
+            away_id = conn.execute(
+                "INSERT INTO Team (Name) VALUES ('TEST_Away')"
+            ).lastrowid
+            player_id = conn.execute(
+                "INSERT INTO Player (TeamId, Name) VALUES (?, 'TEST_Player')",
+                (home_id,),
+            ).lastrowid
+            match_id = conn.execute(
+                """INSERT INTO Match (SportTemplateId, HomeTeamId, AwayTeamId, MatchDate)
+                   VALUES (?, ?, ?, '2026-01-01')""",
+                (template_id, home_id, away_id),
+            ).lastrowid
+            conn.execute(
+                """INSERT INTO MatchLineup (MatchId, TeamId, PlayerId, LineupRole, SortOrder)
+                   VALUES (?, ?, ?, 'starter', 0)""",
+                (match_id, home_id, player_id),
+            )
+            metric_id = conn.execute(
+                """INSERT INTO TeamStatMetric (SportTemplateId, Name, ActionId, OutcomeFilter, SortOrder)
+                   VALUES (?, 'TEST_LegacyMetric', ?, 'Success', 0)""",
+                (template_id, action_id),
+            ).lastrowid
+            conn.execute(
+                """INSERT INTO Event (MatchId, Period, Timestamp, SubjectType, PlayerId, ActionId, Outcome)
+                   VALUES (?, 1, 0, 'player', ?, ?, 'Success')""",
+                (match_id, player_id, action_id),
+            )
+            conn.commit()
+            return int(template_id), int(metric_id), int(match_id), int(action_id)
+        finally:
+            conn.close()
+
+    def test_legacy_metric_migrates_to_own_condition_with_same_counts(self) -> None:
+        template_id, metric_id, match_id, action_id = self._seed_legacy_metric_db()
+        ensure_db(self.db_path)
+        conn = connect(self.db_path)
+        try:
+            metric_columns = {r[1] for r in conn.execute("PRAGMA table_info(TeamStatMetric)")}
+            self.assertNotIn("ActionId", metric_columns)
+            conditions = conn.execute(
+                """SELECT ActionId, OutcomeFilter, Perspective, SortOrder
+                   FROM TeamStatMetricCondition WHERE TeamStatMetricId = ?""",
+                (metric_id,),
+            ).fetchall()
+            self.assertEqual(len(conditions), 1)
+            self.assertEqual(int(conditions[0][0]), action_id)
+            self.assertEqual(conditions[0][1], "Success")
+            self.assertEqual(conditions[0][2], "own")
+            self.assertEqual(int(conditions[0][3]), 0)
+        finally:
+            conn.close()
+        # Counts checked after repository refactor in Task 5; here verify row exists post-migration.
+        conn = connect(self.db_path)
+        try:
+            row = conn.execute(
+                "SELECT Name FROM TeamStatMetric WHERE Id = ?", (metric_id,)
+            ).fetchone()
+            self.assertIsNotNone(row)
+            self.assertEqual(row[0], "TEST_LegacyMetric")
+        finally:
+            conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()

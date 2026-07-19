@@ -214,6 +214,7 @@ def _apply_migrations(conn: sqlite3.Connection) -> None:
     _migrate_phase2_reports(conn)
     _migrate_app_settings(conn)
     _migrate_team_stat_metrics(conn)
+    _migrate_team_stat_metric_conditions(conn)
 
 
 def ensure_db(db_path: Path) -> None:
@@ -352,6 +353,81 @@ def _migrate_team_stat_metrics(conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         "CREATE INDEX IF NOT EXISTS IX_TeamStatMetric_ActionId ON TeamStatMetric(ActionId)"
+    )
+
+
+def _migrate_team_stat_metric_conditions(conn: sqlite3.Connection) -> None:
+    tables = {
+        row[0]
+        for row in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )
+    }
+    if "TeamStatMetric" not in tables:
+        return
+    metric_columns = {row[1] for row in conn.execute("PRAGMA table_info(TeamStatMetric)")}
+    if "ActionId" not in metric_columns:
+        return
+
+    if "TeamStatMetricCondition" not in tables:
+        conn.execute(
+            """
+            CREATE TABLE TeamStatMetricCondition (
+              Id INTEGER PRIMARY KEY AUTOINCREMENT,
+              TeamStatMetricId INTEGER NOT NULL REFERENCES TeamStatMetric(Id) ON DELETE CASCADE,
+              ActionId INTEGER NOT NULL REFERENCES Action(Id) ON DELETE CASCADE,
+              OutcomeFilter TEXT NOT NULL DEFAULT 'any'
+                CHECK (OutcomeFilter IN ('any', 'Success', 'Failure')),
+              Perspective TEXT NOT NULL DEFAULT 'own'
+                CHECK (Perspective IN ('own', 'opponent')),
+              SortOrder INTEGER NOT NULL DEFAULT 0
+            )
+            """
+        )
+    conn.execute(
+        """
+        CREATE TEMP TABLE _legacy_team_stat_metric_conditions AS
+        SELECT Id AS TeamStatMetricId, ActionId, OutcomeFilter, 'own' AS Perspective, 0 AS SortOrder
+        FROM TeamStatMetric
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE TeamStatMetric_new (
+          Id INTEGER PRIMARY KEY AUTOINCREMENT,
+          SportTemplateId INTEGER NOT NULL REFERENCES SportTemplate(Id) ON DELETE CASCADE,
+          Name TEXT NOT NULL,
+          SortOrder INTEGER NOT NULL DEFAULT 0
+        )
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO TeamStatMetric_new (Id, SportTemplateId, Name, SortOrder)
+        SELECT Id, SportTemplateId, Name, SortOrder FROM TeamStatMetric
+        """
+    )
+    conn.execute("PRAGMA foreign_keys = OFF")
+    conn.execute("DROP TABLE TeamStatMetric")
+    conn.execute("ALTER TABLE TeamStatMetric_new RENAME TO TeamStatMetric")
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("DELETE FROM TeamStatMetricCondition")
+    conn.execute(
+        """
+        INSERT INTO TeamStatMetricCondition
+          (TeamStatMetricId, ActionId, OutcomeFilter, Perspective, SortOrder)
+        SELECT TeamStatMetricId, ActionId, OutcomeFilter, Perspective, SortOrder
+        FROM _legacy_team_stat_metric_conditions
+        """
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS IX_TeamStatMetric_SportTemplateId ON TeamStatMetric(SportTemplateId)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS IX_TeamStatMetricCondition_MetricSort ON TeamStatMetricCondition(TeamStatMetricId, SortOrder)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS IX_TeamStatMetricCondition_ActionId ON TeamStatMetricCondition(ActionId)"
     )
 
 
