@@ -134,6 +134,81 @@ def update_sport_template_period_count(
     _run(conn, "UPDATE SportTemplate SET PeriodCount = ? WHERE Id = ?", (period_count, template_id))
 
 
+VALID_OUTCOME_FILTERS = frozenset({"any", "Success", "Failure"})
+
+
+def action_belongs_to_template(conn: sqlite3.Connection, template_id: int, action_id: int) -> bool:
+    row = _row(
+        conn,
+        """
+        SELECT 1
+        FROM Action a
+        INNER JOIN Category c ON c.Id = a.CategoryId
+        WHERE a.Id = ? AND c.SportTemplateId = ?
+        """,
+        (action_id, template_id),
+    )
+    return row is not None
+
+
+def list_team_stat_metrics(conn: sqlite3.Connection, template_id: int) -> list[sqlite3.Row]:
+    return _rows(
+        conn,
+        "SELECT * FROM TeamStatMetric WHERE SportTemplateId = ? ORDER BY SortOrder, Id",
+        (template_id,),
+    )
+
+
+def get_team_stat_metric(conn: sqlite3.Connection, metric_id: int) -> sqlite3.Row | None:
+    return _row(conn, "SELECT * FROM TeamStatMetric WHERE Id = ?", (metric_id,))
+
+
+def create_team_stat_metric(
+    conn: sqlite3.Connection,
+    template_id: int,
+    name: str,
+    action_id: int,
+    outcome_filter: str,
+) -> int:
+    if outcome_filter not in VALID_OUTCOME_FILTERS:
+        raise ValueError("Недопустимый фильтр исхода.")
+    if not action_belongs_to_template(conn, template_id, action_id):
+        raise ValueError("Действие не принадлежит этому шаблону.")
+    sort_order = len(list_team_stat_metrics(conn, template_id))
+    return _insert(
+        conn,
+        """INSERT INTO TeamStatMetric (SportTemplateId, Name, ActionId, OutcomeFilter, SortOrder)
+           VALUES (?, ?, ?, ?, ?)""",
+        (template_id, name.strip(), action_id, outcome_filter, sort_order),
+    )
+
+
+def update_team_stat_metric(
+    conn: sqlite3.Connection,
+    metric_id: int,
+    name: str,
+    action_id: int,
+    outcome_filter: str,
+) -> None:
+    metric = get_team_stat_metric(conn, metric_id)
+    if not metric:
+        raise ValueError("Метрика не найдена.")
+    if outcome_filter not in VALID_OUTCOME_FILTERS:
+        raise ValueError("Недопустимый фильтр исхода.")
+    template_id = int(metric["SportTemplateId"])
+    if not action_belongs_to_template(conn, template_id, action_id):
+        raise ValueError("Действие не принадлежит этому шаблону.")
+    _run(
+        conn,
+        """UPDATE TeamStatMetric SET Name = ?, ActionId = ?, OutcomeFilter = ? WHERE Id = ?""",
+        (name.strip(), action_id, outcome_filter, metric_id),
+    )
+
+
+def delete_team_stat_metric(conn: sqlite3.Connection, metric_id: int) -> None:
+    _run(conn, "DELETE FROM TeamStatMetric WHERE Id = ?", (metric_id,))
+
+
 def list_comments_by_action(conn: sqlite3.Connection, action_id: int) -> list[sqlite3.Row]:
     return _rows(
         conn, "SELECT * FROM CommentTemplate WHERE ActionId = ? ORDER BY SortOrder, Id", (action_id,)
