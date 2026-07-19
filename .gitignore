@@ -22,6 +22,12 @@ Thumbs.db
 .cursor/rules/
 .cursor/skills/
 .cursorrules
+.agents/
+.codegraph/
+.comet/
+/AGENTS.md
+/CLAUDE.md
+/skills-lock.json
 
 # VS Code / Cursor workspace editor settings
 .vscode/
