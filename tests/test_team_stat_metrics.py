@@ -22,18 +22,33 @@ class TeamStatMetricSchemaTests(unittest.TestCase):
         except OSError:
             pass
 
-    def test_team_stat_metric_table_exists_after_ensure_db(self) -> None:
+    def test_team_stat_metric_tables_exist_after_ensure_db(self) -> None:
         ensure_db(self.db_path)
         conn = connect(self.db_path)
         try:
-            row = conn.execute(
+            metric_row = conn.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='TeamStatMetric'"
             ).fetchone()
-            self.assertIsNotNone(row)
-            columns = {r[1] for r in conn.execute("PRAGMA table_info(TeamStatMetric)")}
+            condition_row = conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='TeamStatMetricCondition'"
+            ).fetchone()
+            self.assertIsNotNone(metric_row)
+            self.assertIsNotNone(condition_row)
+            metric_columns = {r[1] for r in conn.execute("PRAGMA table_info(TeamStatMetric)")}
+            condition_columns = {
+                r[1] for r in conn.execute("PRAGMA table_info(TeamStatMetricCondition)")
+            }
+            self.assertEqual(metric_columns, {"Id", "SportTemplateId", "Name", "SortOrder"})
             self.assertEqual(
-                columns,
-                {"Id", "SportTemplateId", "Name", "ActionId", "OutcomeFilter", "SortOrder"},
+                condition_columns,
+                {
+                    "Id",
+                    "TeamStatMetricId",
+                    "ActionId",
+                    "OutcomeFilter",
+                    "Perspective",
+                    "SortOrder",
+                },
             )
         finally:
             conn.close()

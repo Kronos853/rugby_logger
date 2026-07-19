@@ -45,9 +45,17 @@ CREATE TABLE TeamStatMetric (
     Id              INT             NOT NULL IDENTITY(1,1) PRIMARY KEY,
     SportTemplateId INT             NOT NULL REFERENCES SportTemplate(Id) ON DELETE CASCADE,
     Name            NVARCHAR(100)   NOT NULL,
+    SortOrder       INT             NOT NULL DEFAULT 0
+);
+
+CREATE TABLE TeamStatMetricCondition (
+    Id              INT             NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    TeamStatMetricId INT            NOT NULL REFERENCES TeamStatMetric(Id) ON DELETE CASCADE,
     ActionId        INT             NOT NULL REFERENCES Action(Id) ON DELETE CASCADE,
     OutcomeFilter   VARCHAR(10)     NOT NULL DEFAULT 'any'
                     CHECK (OutcomeFilter IN ('any', 'Success', 'Failure')),
+    Perspective     VARCHAR(10)     NOT NULL DEFAULT 'own'
+                    CHECK (Perspective IN ('own', 'opponent')),
     SortOrder       INT             NOT NULL DEFAULT 0
 );
 
@@ -197,7 +205,8 @@ CREATE INDEX IX_Event_MatchId           ON Event(MatchId);
 CREATE INDEX IX_Event_PlayerId          ON Event(PlayerId);
 CREATE INDEX IX_Event_ActionId          ON Event(ActionId);
 CREATE INDEX IX_TeamStatMetric_SportTemplateId ON TeamStatMetric(SportTemplateId);
-CREATE INDEX IX_TeamStatMetric_ActionId ON TeamStatMetric(ActionId);
+CREATE INDEX IX_TeamStatMetricCondition_MetricSort ON TeamStatMetricCondition(TeamStatMetricId, SortOrder);
+CREATE INDEX IX_TeamStatMetricCondition_ActionId ON TeamStatMetricCondition(ActionId);
 
 -- =============================================================================
 -- WORKFLOW: подготовка матча из сохранённого состава

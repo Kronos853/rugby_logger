@@ -47,13 +47,21 @@ CREATE TABLE IF NOT EXISTS TeamStatMetric (
   Id INTEGER PRIMARY KEY AUTOINCREMENT,
   SportTemplateId INTEGER NOT NULL REFERENCES SportTemplate(Id) ON DELETE CASCADE,
   Name TEXT NOT NULL,
+  SortOrder INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS TeamStatMetricCondition (
+  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+  TeamStatMetricId INTEGER NOT NULL REFERENCES TeamStatMetric(Id) ON DELETE CASCADE,
   ActionId INTEGER NOT NULL REFERENCES Action(Id) ON DELETE CASCADE,
   OutcomeFilter TEXT NOT NULL DEFAULT 'any' CHECK (OutcomeFilter IN ('any', 'Success', 'Failure')),
+  Perspective TEXT NOT NULL DEFAULT 'own' CHECK (Perspective IN ('own', 'opponent')),
   SortOrder INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS IX_TeamStatMetric_SportTemplateId ON TeamStatMetric(SportTemplateId);
-CREATE INDEX IF NOT EXISTS IX_TeamStatMetric_ActionId ON TeamStatMetric(ActionId);
+CREATE INDEX IF NOT EXISTS IX_TeamStatMetricCondition_MetricSort ON TeamStatMetricCondition(TeamStatMetricId, SortOrder);
+CREATE INDEX IF NOT EXISTS IX_TeamStatMetricCondition_ActionId ON TeamStatMetricCondition(ActionId);
 
 CREATE TABLE IF NOT EXISTS Team (
   Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -191,6 +199,11 @@ def _pending_migrations(conn: sqlite3.Connection) -> bool:
     if "AppSetting" not in tables:
         return True
     if "TeamStatMetric" not in tables:
+        return True
+    if "TeamStatMetricCondition" not in tables:
+        return True
+    metric_columns = {row[1] for row in conn.execute("PRAGMA table_info(TeamStatMetric)")}
+    if "ActionId" in metric_columns:
         return True
     return False
 
