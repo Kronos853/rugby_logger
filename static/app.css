@@ -250,13 +250,13 @@ button {
   vertical-align: middle;
 }
 
-.match-statistics__value {
+.match-statistics__table td.match-statistics__value {
   text-align: center;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
 
-.match-statistics__name {
+.match-statistics__table td.match-statistics__name {
   text-align: center;
   font-weight: 500;
 }
