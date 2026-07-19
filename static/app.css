@@ -127,6 +127,134 @@ button {
   border-color: #dc3545;
 }
 
+.btn-small {
+  padding: 6px 10px;
+  font-size: 0.875rem;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #495057;
+  border-color: #ced4da;
+}
+
+.btn-ghost:hover {
+  background: #f1f3f5;
+}
+
+.btn-ghost-danger {
+  background: transparent;
+  color: #a61e2b;
+  border-color: #e9b8bd;
+}
+
+.btn-ghost-danger:hover {
+  background: #fff5f5;
+  border-color: #d58b93;
+}
+
+.stat-metrics-list {
+  display: grid;
+  gap: 16px;
+}
+
+.stat-metric-card {
+  background: #fff;
+  padding: 18px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-metric-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.stat-metric-title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.stat-metric-rename {
+  flex: 1 1 320px;
+  margin-bottom: 0;
+}
+
+.stat-metric-rename input {
+  min-width: 180px;
+  flex: 1;
+}
+
+.stat-metric-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.stat-conditions {
+  margin: 16px 0 0 18px;
+  padding-left: 16px;
+  border-left: 3px solid #e9ecef;
+  font-size: 0.9rem;
+}
+
+.stat-conditions-label {
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stat-condition-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.stat-condition-form {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.stat-condition-form input,
+.stat-condition-form select {
+  padding: 6px 8px;
+}
+
+.stat-condition-add {
+  margin: 12px 0 0;
+  padding: 12px;
+  background: #f8f9fa;
+  border: 1px dashed #ced4da;
+  border-radius: 6px;
+}
+
+@media (max-width: 700px) {
+  .stat-metric-controls {
+    margin-left: 0;
+  }
+
+  .stat-conditions {
+    margin-left: 0;
+    padding-left: 10px;
+  }
+
+  .stat-condition-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;

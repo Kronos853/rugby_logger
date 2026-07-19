@@ -26,67 +26,75 @@
   </form>
 </div>
 
-<div class="card">
+<div class="stat-metrics-list">
   {% for m in metrics %}
-  <div class="stat-metric-block">
-    <form class="form-row" method="post" action="{{ url_for('template_stat_metrics_update', template_id=template.Id, metric_id=m.Id) }}">
-      <strong>{{ m.Name }}</strong>
-      <input name="name" value="{{ m.Name }}" />
-      <button class="btn btn-primary" type="submit">Переименовать</button>
-    </form>
-    <form method="post" action="{{ url_for('template_stat_metrics_move_up', template_id=template.Id, metric_id=m.Id) }}" style="display:inline;">
-      <button class="btn" type="submit">↑</button>
-    </form>
-    <form method="post" action="{{ url_for('template_stat_metrics_move_down', template_id=template.Id, metric_id=m.Id) }}" style="display:inline;">
-      <button class="btn" type="submit">↓</button>
-    </form>
-    <form method="post" action="{{ url_for('template_stat_metrics_delete', template_id=template.Id, metric_id=m.Id) }}" style="display:inline;">
-      <button class="btn btn-danger" type="submit">Удалить метрику</button>
-    </form>
+  <div class="stat-metric-card">
+    <div class="stat-metric-header">
+      <h2 class="stat-metric-title">{{ m.Name }}</h2>
+      <form class="form-row stat-metric-rename" method="post" action="{{ url_for('template_stat_metrics_update', template_id=template.Id, metric_id=m.Id) }}">
+        <input name="name" value="{{ m.Name }}" />
+        <button class="btn btn-primary btn-small" type="submit">Переименовать</button>
+      </form>
+      <div class="stat-metric-controls">
+        <form method="post" action="{{ url_for('template_stat_metrics_move_up', template_id=template.Id, metric_id=m.Id) }}">
+          <button class="btn btn-ghost" type="submit">↑</button>
+        </form>
+        <form method="post" action="{{ url_for('template_stat_metrics_move_down', template_id=template.Id, metric_id=m.Id) }}">
+          <button class="btn btn-ghost" type="submit">↓</button>
+        </form>
+        <form method="post" action="{{ url_for('template_stat_metrics_delete', template_id=template.Id, metric_id=m.Id) }}">
+          <button class="btn btn-ghost-danger" type="submit">Удалить метрику</button>
+        </form>
+      </div>
+    </div>
 
-    <h4>Условия</h4>
+    <div class="stat-conditions">
+      <div class="stat-conditions-label muted">Условия</div>
     {% set conditions = metric_conditions.get(m.Id, []) %}
     {% for c in conditions %}
-    <form class="form-row" method="post" action="{{ url_for('template_stat_metrics_condition_update', template_id=template.Id, metric_id=m.Id, condition_id=c.Id) }}">
-      <select name="actionId">
-        {% for action in actions %}
-        <option value="{{ action.Id }}" {% if action.Id == c.ActionId %}selected{% endif %}>{{ action.Name }}</option>
-        {% endfor %}
-      </select>
-      <select name="outcomeFilter">
-        <option value="any" {% if c.OutcomeFilter == 'any' %}selected{% endif %}>Любой</option>
-        <option value="Success" {% if c.OutcomeFilter == 'Success' %}selected{% endif %}>Успех</option>
-        <option value="Failure" {% if c.OutcomeFilter == 'Failure' %}selected{% endif %}>Неудача</option>
-      </select>
-      <label>
-        <input type="checkbox" name="countOpponent" value="1" {% if c.Perspective == 'opponent' %}checked{% endif %} />
-        Учитывать события противника
-      </label>
-      <button class="btn btn-primary" type="submit">Сохранить</button>
-    </form>
-    <form method="post" action="{{ url_for('template_stat_metrics_condition_delete', template_id=template.Id, metric_id=m.Id, condition_id=c.Id) }}" style="display:inline;">
-      <button class="btn btn-danger" type="submit">Удалить условие</button>
-    </form>
+      <div class="stat-condition-row">
+        <form class="form-row stat-condition-form" method="post" action="{{ url_for('template_stat_metrics_condition_update', template_id=template.Id, metric_id=m.Id, condition_id=c.Id) }}">
+          <select name="actionId">
+            {% for action in actions %}
+            <option value="{{ action.Id }}" {% if action.Id == c.ActionId %}selected{% endif %}>{{ action.Name }}</option>
+            {% endfor %}
+          </select>
+          <select name="outcomeFilter">
+            <option value="any" {% if c.OutcomeFilter == 'any' %}selected{% endif %}>Любой</option>
+            <option value="Success" {% if c.OutcomeFilter == 'Success' %}selected{% endif %}>Успех</option>
+            <option value="Failure" {% if c.OutcomeFilter == 'Failure' %}selected{% endif %}>Неудача</option>
+          </select>
+          <label>
+            <input type="checkbox" name="countOpponent" value="1" {% if c.Perspective == 'opponent' %}checked{% endif %} />
+            Учитывать события противника
+          </label>
+          <button class="btn btn-primary btn-small" type="submit">Сохранить</button>
+        </form>
+        <form method="post" action="{{ url_for('template_stat_metrics_condition_delete', template_id=template.Id, metric_id=m.Id, condition_id=c.Id) }}">
+          <button class="btn btn-ghost-danger btn-small" type="submit">Удалить условие</button>
+        </form>
+      </div>
     {% endfor %}
 
-    <form class="form-row" method="post" action="{{ url_for('template_stat_metrics_condition_create', template_id=template.Id, metric_id=m.Id) }}">
-      <select name="actionId" required>
-        <option value="">Добавить условие — действие</option>
-        {% for action in actions %}
-        <option value="{{ action.Id }}">{{ action.Name }}</option>
-        {% endfor %}
-      </select>
-      <select name="outcomeFilter">
-        <option value="any">Любой исход</option>
-        <option value="Success">Успех</option>
-        <option value="Failure">Неудача</option>
-      </select>
-      <label>
-        <input type="checkbox" name="countOpponent" value="1" />
-        Учитывать события противника
-      </label>
-      <button class="btn" type="submit">Добавить условие</button>
-    </form>
+      <form class="form-row stat-condition-add" method="post" action="{{ url_for('template_stat_metrics_condition_create', template_id=template.Id, metric_id=m.Id) }}">
+        <select name="actionId" required>
+          <option value="">Добавить условие — действие</option>
+          {% for action in actions %}
+          <option value="{{ action.Id }}">{{ action.Name }}</option>
+          {% endfor %}
+        </select>
+        <select name="outcomeFilter">
+          <option value="any">Любой исход</option>
+          <option value="Success">Успех</option>
+          <option value="Failure">Неудача</option>
+        </select>
+        <label>
+          <input type="checkbox" name="countOpponent" value="1" />
+          Учитывать события противника
+        </label>
+        <button class="btn btn-ghost" type="submit">Добавить условие</button>
+      </form>
+    </div>
   </div>
   {% else %}
   <p>Метрики не настроены.</p>

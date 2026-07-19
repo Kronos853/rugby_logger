@@ -75,6 +75,40 @@ class StatMetricsConstructorPageTests(unittest.TestCase):
         self.assertIn('name="countOpponent"', html)
         self.assertIn("conditions/create", html)
 
+    def test_each_metric_has_card_header_and_grouped_conditions(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            for metric in repo.list_team_stat_metrics(conn, self.template_id):
+                repo.delete_team_stat_metric(conn, int(metric["Id"]))
+            repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_First card", self.action_id, "any", "own"
+            )
+            repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Second card", self.action_id, "any", "own"
+            )
+        finally:
+            conn.close()
+
+        resp = self.client.get(f"/directories/templates/{self.template_id}/stat-metrics")
+        html = resp.get_data(as_text=True)
+        card_marker = '<div class="stat-metric-card">'
+        card_starts = []
+        search_from = 0
+        while (start := html.find(card_marker, search_from)) != -1:
+            card_starts.append(start)
+            search_from = start + len(card_marker)
+        self.assertEqual(len(card_starts), 2)
+        card_ends = card_starts[1:] + [len(html)]
+        for metric_name, start, end in zip(
+            ("TEST_First card", "TEST_Second card"), card_starts, card_ends
+        ):
+            card_html = html[start:end]
+            self.assertRegex(
+                card_html,
+                rf'<h2 class="stat-metric-title">\s*{metric_name}\s*</h2>',
+            )
+            self.assertIn('<div class="stat-conditions">', card_html)
+
     def test_template_detail_links_to_stat_metrics(self) -> None:
         resp = self.client.get(f"/directories/templates/{self.template_id}")
         self.assertEqual(resp.status_code, 200)
