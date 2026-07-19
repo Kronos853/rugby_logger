@@ -2,6 +2,8 @@
 comet_change: compose-team-stat-metrics
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-07-19-compose-team-stat-metrics
+status: final
 ---
 
 # Compose Team Stat Metrics — Technical Design

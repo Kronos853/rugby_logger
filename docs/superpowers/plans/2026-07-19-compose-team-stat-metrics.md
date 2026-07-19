@@ -2,6 +2,7 @@
 change: compose-team-stat-metrics
 design-doc: docs/superpowers/specs/2026-07-19-compose-team-stat-metrics-design.md
 base-ref: e18fdc90aa312992ba38c350b9fb863654c963f5
+archived-with: 2026-07-19-compose-team-stat-metrics
 ---
 
 # Compose Team Stat Metrics Implementation Plan

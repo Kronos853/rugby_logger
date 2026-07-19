@@ -1,6 +1,6 @@
 workflow: full
 language: en
-phase: build
+phase: archive
 context_compression: off
 build_mode: subagent-driven-development
 build_pause: null
@@ -13,14 +13,14 @@ auto_transition: true
 base_ref: e18fdc90aa312992ba38c350b9fb863654c963f5
 design_doc: docs/superpowers/specs/2026-07-19-compose-team-stat-metrics-design.md
 plan: docs/superpowers/plans/2026-07-19-compose-team-stat-metrics.md
-verify_result: fail
-verify_failures: 1
+verify_result: pass
+verify_failures: 0
 verification_report: docs/superpowers/reports/2026-07-19-compose-team-stat-metrics-verify.md
 branch_status: pending
 created_at: 2026-07-19
-verified_at: null
-archive_confirmation: null
-archived: false
+verified_at: 2026-07-19
+archive_confirmation: confirmed
+archived: true
 direct_override: null
 handoff_context: openspec/changes/compose-team-stat-metrics/.comet/handoff/design-context.json
 handoff_hash: d4989fe4df7c52b280df54e795c9bea5e244f43668afc1a813ad75551af10341
