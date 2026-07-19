@@ -40,6 +40,17 @@ CREATE TABLE CommentTemplate (
     SortOrder       INT             NOT NULL DEFAULT 0
 );
 
+-- Метрики командной статистики матча (конструктор на уровне шаблона)
+CREATE TABLE TeamStatMetric (
+    Id              INT             NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    SportTemplateId INT             NOT NULL REFERENCES SportTemplate(Id) ON DELETE CASCADE,
+    Name            NVARCHAR(100)   NOT NULL,
+    ActionId        INT             NOT NULL REFERENCES Action(Id) ON DELETE CASCADE,
+    OutcomeFilter   VARCHAR(10)     NOT NULL DEFAULT 'any'
+                    CHECK (OutcomeFilter IN ('any', 'Success', 'Failure')),
+    SortOrder       INT             NOT NULL DEFAULT 0
+);
+
 -- =============================================================================
 -- TOURNAMENTS (справочник турниров)
 -- =============================================================================
@@ -185,6 +196,8 @@ CREATE INDEX IX_MatchLineup_MatchId     ON MatchLineup(MatchId);
 CREATE INDEX IX_Event_MatchId           ON Event(MatchId);
 CREATE INDEX IX_Event_PlayerId          ON Event(PlayerId);
 CREATE INDEX IX_Event_ActionId          ON Event(ActionId);
+CREATE INDEX IX_TeamStatMetric_SportTemplateId ON TeamStatMetric(SportTemplateId);
+CREATE INDEX IX_TeamStatMetric_ActionId ON TeamStatMetric(ActionId);
 
 -- =============================================================================
 -- WORKFLOW: подготовка матча из сохранённого состава

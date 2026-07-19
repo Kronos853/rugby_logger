@@ -1,7 +1,7 @@
 ---
 change: match-team-statistics
 design-doc: docs/superpowers/specs/2026-07-19-match-team-statistics-design.md
-base-ref: b992abed979657cd0e95a070f312532e1adf55bf
+base-ref: 2a95db7af5092bae5535d0e60fc36fc9ae7dacdb
 ---
 
 # Match Team Statistics Implementation Plan

@@ -43,6 +43,18 @@ CREATE TABLE IF NOT EXISTS CommentTemplate (
   SortOrder INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS TeamStatMetric (
+  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+  SportTemplateId INTEGER NOT NULL REFERENCES SportTemplate(Id) ON DELETE CASCADE,
+  Name TEXT NOT NULL,
+  ActionId INTEGER NOT NULL REFERENCES Action(Id) ON DELETE CASCADE,
+  OutcomeFilter TEXT NOT NULL DEFAULT 'any' CHECK (OutcomeFilter IN ('any', 'Success', 'Failure')),
+  SortOrder INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS IX_TeamStatMetric_SportTemplateId ON TeamStatMetric(SportTemplateId);
+CREATE INDEX IF NOT EXISTS IX_TeamStatMetric_ActionId ON TeamStatMetric(ActionId);
+
 CREATE TABLE IF NOT EXISTS Team (
   Id INTEGER PRIMARY KEY AUTOINCREMENT,
   Name TEXT NOT NULL,
@@ -173,10 +185,12 @@ def _pending_migrations(conn: sqlite3.Connection) -> bool:
     tables = {
         row[0]
         for row in conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='AppSetting'"
+            "SELECT name FROM sqlite_master WHERE type='table'"
         )
     }
     if "AppSetting" not in tables:
+        return True
+    if "TeamStatMetric" not in tables:
         return True
     return False
 
@@ -186,6 +200,7 @@ def _apply_migrations(conn: sqlite3.Connection) -> None:
     _migrate_tournament_refactor(conn)
     _migrate_phase2_reports(conn)
     _migrate_app_settings(conn)
+    _migrate_team_stat_metrics(conn)
 
 
 def ensure_db(db_path: Path) -> None:
@@ -295,6 +310,35 @@ def _migrate_app_settings(conn: sqlite3.Connection) -> None:
           Value TEXT
         )
         """
+    )
+
+
+def _migrate_team_stat_metrics(conn: sqlite3.Connection) -> None:
+    tables = {
+        row[0]
+        for row in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )
+    }
+    if "TeamStatMetric" in tables:
+        return
+    conn.execute(
+        """
+        CREATE TABLE TeamStatMetric (
+          Id INTEGER PRIMARY KEY AUTOINCREMENT,
+          SportTemplateId INTEGER NOT NULL REFERENCES SportTemplate(Id) ON DELETE CASCADE,
+          Name TEXT NOT NULL,
+          ActionId INTEGER NOT NULL REFERENCES Action(Id) ON DELETE CASCADE,
+          OutcomeFilter TEXT NOT NULL DEFAULT 'any' CHECK (OutcomeFilter IN ('any', 'Success', 'Failure')),
+          SortOrder INTEGER NOT NULL DEFAULT 0
+        )
+        """
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS IX_TeamStatMetric_SportTemplateId ON TeamStatMetric(SportTemplateId)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS IX_TeamStatMetric_ActionId ON TeamStatMetric(ActionId)"
     )
 
 
