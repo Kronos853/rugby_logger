@@ -53,6 +53,7 @@
         <td>
           <a href="{{ url_for('match_setup', match_id=m.Id) }}">Подготовка</a> |
           <a href="{{ url_for('tagging_control', match_id=m.Id) }}">Разметка</a> |
+          <a href="{{ url_for('match_statistics', match_id=m.Id) }}">Статистика</a> |
           <form method="post" action="{{ url_for('matches_delete', match_id=m.Id) }}" style="display:inline;">
             <button class="btn btn-danger" type="submit">Удалить</button>
           </form>
