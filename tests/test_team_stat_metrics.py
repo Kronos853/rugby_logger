@@ -131,6 +131,25 @@ class TeamStatMetricCrudTests(unittest.TestCase):
         finally:
             conn.close()
 
+    def test_reorder_works_after_delete_and_recreate(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            first_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_A", self.action_id, "any"
+            )
+            second_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_B", self.action_id, "any"
+            )
+            repo.delete_team_stat_metric(conn, first_id)
+            third_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_C", self.action_id, "any"
+            )
+            repo.swap_team_stat_metric_order(conn, self.template_id, third_id, "up")
+            rows = repo.list_team_stat_metrics(conn, self.template_id)
+            self.assertEqual([int(r["Id"]) for r in rows], [third_id, second_id])
+        finally:
+            conn.close()
+
 
 class TeamStatMetricCountTests(unittest.TestCase):
     def setUp(self) -> None:

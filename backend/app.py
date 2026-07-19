@@ -174,8 +174,14 @@ def create_app() -> Flask:
             categories = repo.list_categories_by_template(conn, template_id)
             actions = []
             for cat in categories:
+                cat_name = str(cat["Name"])
                 for action in repo.list_actions_by_category(conn, int(cat["Id"])):
-                    actions.append(action)
+                    actions.append(
+                        {
+                            "Id": int(action["Id"]),
+                            "Name": f"{cat_name} — {action['Name']}",
+                        }
+                    )
         return render_template(
             "templates/stat_metrics.html",
             template=template,
@@ -204,7 +210,13 @@ def create_app() -> Flask:
         if name and action_id:
             try:
                 with db() as conn:
-                    repo.update_team_stat_metric(conn, metric_id, name, action_id, outcome_filter)
+                    metric = repo.get_team_stat_metric(conn, metric_id)
+                    if not metric or int(metric["SportTemplateId"]) != template_id:
+                        flash("Метрика не найдена.", "error")
+                    else:
+                        repo.update_team_stat_metric(
+                            conn, metric_id, name, action_id, outcome_filter
+                        )
             except ValueError as exc:
                 flash(str(exc), "error")
         return redirect(url_for("template_stat_metrics", template_id=template_id))
@@ -212,7 +224,9 @@ def create_app() -> Flask:
     @app.post("/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/delete")
     def template_stat_metrics_delete(template_id: int, metric_id: int):
         with db() as conn:
-            repo.delete_team_stat_metric(conn, metric_id)
+            metric = repo.get_team_stat_metric(conn, metric_id)
+            if metric and int(metric["SportTemplateId"]) == template_id:
+                repo.delete_team_stat_metric(conn, metric_id)
         return redirect(url_for("template_stat_metrics", template_id=template_id))
 
     @app.post("/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/move-up")

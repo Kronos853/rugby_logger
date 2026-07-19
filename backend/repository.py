@@ -174,7 +174,8 @@ def create_team_stat_metric(
         raise ValueError("Недопустимый фильтр исхода.")
     if not action_belongs_to_template(conn, template_id, action_id):
         raise ValueError("Действие не принадлежит этому шаблону.")
-    sort_order = len(list_team_stat_metrics(conn, template_id))
+    existing = list_team_stat_metrics(conn, template_id)
+    sort_order = (max(int(m["SortOrder"]) for m in existing) + 1) if existing else 0
     return _insert(
         conn,
         """INSERT INTO TeamStatMetric (SportTemplateId, Name, ActionId, OutcomeFilter, SortOrder)
