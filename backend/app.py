@@ -562,6 +562,23 @@ def create_app() -> Flask:
             scores=scores,
         )
 
+    @app.get("/matches/<int:match_id>/statistics")
+    def match_statistics(match_id: int):
+        with db() as conn:
+            match = repo.get_match(conn, match_id)
+            if not match:
+                return redirect(url_for("matches_page"))
+            teams = repo.list_teams(conn)
+            score = calculate_match_score_for_match(conn, match_id)
+            metric_rows = repo.get_match_team_stat_counts(conn, match_id)
+        return render_template(
+            "matches/statistics.html",
+            match=match,
+            teams=teams,
+            score=score,
+            metric_rows=metric_rows,
+        )
+
     @app.post("/matches/create")
     def matches_create():
         sport_template_id = request.form.get("sportTemplateId", type=int)

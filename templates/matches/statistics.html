@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('matches_page') }}">← Матчи</a></p>
+<h1 class="page-title">Статистика матча</h1>
+
+{% include "tagging/_score.html" %}
+
+{% if metric_rows %}
+<div class="card match-statistics">
+  <div class="match-statistics__col">
+    <h3>{{ (teams | selectattr("Id", "equalto", match.HomeTeamId) | list | first).Name }}</h3>
+    <table class="data-table">
+      <thead><tr><th>Метрика</th><th>Значение</th></tr></thead>
+      <tbody>
+        {% for row in metric_rows %}
+        <tr><td>{{ row.name }}</td><td>{{ row.home_count }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="match-statistics__col">
+    <h3>{{ (teams | selectattr("Id", "equalto", match.AwayTeamId) | list | first).Name }}</h3>
+    <table class="data-table">
+      <thead><tr><th>Метрика</th><th>Значение</th></tr></thead>
+      <tbody>
+        {% for row in metric_rows %}
+        <tr><td>{{ row.name }}</td><td>{{ row.away_count }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card"><p>Метрики не настроены для шаблона этого матча.</p></div>
+{% endif %}
+{% endblock %}

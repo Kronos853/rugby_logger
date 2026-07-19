@@ -229,6 +229,22 @@ button {
   white-space: nowrap;
 }
 
+.match-statistics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.match-statistics__col h3 {
+  margin-top: 0;
+}
+
+@media (max-width: 900px) {
+  .match-statistics {
+    grid-template-columns: 1fr;
+  }
+}
+
 .report-match-section {
   margin-bottom: 24px;
   padding-bottom: 16px;
