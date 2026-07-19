@@ -55,7 +55,7 @@ base-ref: 2a95db7af5092bae5535d0e60fc36fc9ae7dacdb
 **Interfaces:**
 - Produces: SQLite table `TeamStatMetric(Id, SportTemplateId, Name, ActionId, OutcomeFilter, SortOrder)` with FK `SportTemplateId → SportTemplate ON DELETE CASCADE`, `ActionId → Action ON DELETE CASCADE`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/test_team_stat_metrics.py
@@ -102,13 +102,13 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricSchemaTests.test_team_stat_metric_table_exists_after_ensure_db -v`
 
 Expected: FAIL — table `TeamStatMetric` not found.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Add to `docs/schema.sql` (after `CommentTemplate` block):
 
@@ -189,13 +189,13 @@ def _migrate_team_stat_metrics(conn: sqlite3.Connection) -> None:
     )
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricSchemaTests.test_team_stat_metric_table_exists_after_ensure_db -v`
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/schema.sql backend/db.py tests/test_team_stat_metrics.py
@@ -220,7 +220,7 @@ git commit -m "feat: add TeamStatMetric table and migration"
   - `action_belongs_to_template(conn, template_id: int, action_id: int) -> bool`
   - `get_team_stat_metric(conn, metric_id: int) -> sqlite3.Row | None`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `tests/test_team_stat_metrics.py`:
 
@@ -302,13 +302,13 @@ class TeamStatMetricCrudTests(unittest.TestCase):
             conn.close()
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricCrudTests -v`
 
 Expected: FAIL — `AttributeError: module 'backend.repository' has no attribute 'create_team_stat_metric'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Add to `backend/repository.py`:
 
@@ -388,13 +388,13 @@ def delete_team_stat_metric(conn: sqlite3.Connection, metric_id: int) -> None:
     _run(conn, "DELETE FROM TeamStatMetric WHERE Id = ?", (metric_id,))
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricCrudTests -v`
 
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/repository.py tests/test_team_stat_metrics.py
@@ -413,7 +413,7 @@ git commit -m "feat: add TeamStatMetric repository CRUD"
 - Consumes: `list_team_stat_metrics`, `get_team_stat_metric` (Task 2)
 - Produces: `swap_team_stat_metric_order(conn, template_id: int, metric_id: int, direction: str) -> None` where `direction` is `'up'` or `'down'`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
     def test_swap_metric_order_up_and_down(self) -> None:
@@ -435,13 +435,13 @@ git commit -m "feat: add TeamStatMetric repository CRUD"
             conn.close()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricCrudTests.test_swap_metric_order_up_and_down -v`
 
 Expected: FAIL — `swap_team_stat_metric_order` not defined
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 def swap_team_stat_metric_order(
@@ -479,13 +479,13 @@ def swap_team_stat_metric_order(
     )
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricCrudTests.test_swap_metric_order_up_and_down -v`
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/repository.py tests/test_team_stat_metrics.py
@@ -505,7 +505,7 @@ git commit -m "feat: swap TeamStatMetric sort order"
 - Produces: `get_match_team_stat_counts(conn, match_id: int) -> list[dict[str, Any]]` returning ordered rows:
   `{"metric_id": int, "name": str, "sort_order": int, "home_count": int, "away_count": int}`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add helper and tests to `tests/test_team_stat_metrics.py`:
 
@@ -607,13 +607,13 @@ class TeamStatMetricCountTests(unittest.TestCase):
             conn.close()
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricCountTests -v`
 
 Expected: FAIL — `get_match_team_stat_counts` not defined
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 def get_match_team_stat_counts(conn: sqlite3.Connection, match_id: int) -> list[dict[str, Any]]:
@@ -680,13 +680,13 @@ def get_match_team_stat_counts(conn: sqlite3.Connection, match_id: int) -> list[
     return result
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricCountTests -v`
 
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/repository.py tests/test_team_stat_metrics.py
@@ -709,7 +709,7 @@ git commit -m "feat: aggregate match team stat counts via MatchLineup"
   - `delete_team_stat_metrics_by_category(conn, category_id: int) -> None`
   - Modified `delete_action` / `delete_category` raise `ValueError("Действие используется в событиях матчей.")` or category equivalent when blocked
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```python
 class TeamStatMetricDeleteSafetyTests(unittest.TestCase):
@@ -756,13 +756,13 @@ class TeamStatMetricDeleteSafetyTests(unittest.TestCase):
             conn.close()
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricDeleteSafetyTests -v`
 
 Expected: FAIL — delete not blocked / metrics not cascaded
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 def count_events_by_action(conn: sqlite3.Connection, action_id: int) -> int:
@@ -823,13 +823,13 @@ Update `backend/app.py` delete routes to catch `ValueError` and `flash(str(exc),
         return redirect(url_for("template_detail", template_id=template_id))
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricDeleteSafetyTests -v`
 
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/repository.py backend/app.py tests/test_team_stat_metrics.py
@@ -855,7 +855,7 @@ git commit -m "feat: block action/category delete when used in events"
   - `POST .../stat-metrics/<int:metric_id>/move-up` → `template_stat_metrics_move_up`
   - `POST .../stat-metrics/<int:metric_id>/move-down` → `template_stat_metrics_move_down`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `tests/test_match_statistics_page.py`:
 
@@ -871,13 +871,13 @@ class StatMetricsConstructorPageTests(unittest.TestCase):
         self.assertIn('name="outcomeFilter"', html)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python -m unittest tests.test_match_statistics_page.StatMetricsConstructorPageTests.test_stat_metrics_page_renders_create_form -v`
 
 Expected: FAIL — 404
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Add routes to `backend/app.py` (after `template_detail`):
 
@@ -1014,13 +1014,13 @@ Create `templates/templates/stat_metrics.html`:
 {% endblock %}
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python -m unittest tests.test_match_statistics_page.StatMetricsConstructorPageTests.test_stat_metrics_page_renders_create_form -v`
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app.py templates/templates/stat_metrics.html tests/test_match_statistics_page.py
@@ -1034,7 +1034,7 @@ git commit -m "feat: add team stat metric constructor page"
 **Files:**
 - Modify: `templates/templates/detail.html` (link only — no inline constructor)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
     def test_template_detail_links_to_stat_metrics(self) -> None:
@@ -1045,13 +1045,13 @@ git commit -m "feat: add team stat metric constructor page"
         self.assertIn("Командные метрики", html)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python -m unittest tests.test_match_statistics_page.StatMetricsConstructorPageTests.test_template_detail_links_to_stat_metrics -v`
 
 Expected: FAIL — link absent
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Add after the page title in `templates/templates/detail.html`:
 
@@ -1063,13 +1063,13 @@ Add after the page title in `templates/templates/detail.html`:
 
 Do not add metric CRUD to `detail.html`; leave `ShowInReport` checkboxes unchanged.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python -m unittest tests.test_match_statistics_page.StatMetricsConstructorPageTests.test_template_detail_links_to_stat_metrics -v`
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add templates/templates/detail.html tests/test_match_statistics_page.py
@@ -1088,7 +1088,7 @@ git commit -m "feat: link template detail to stat metrics page"
 - Consumes: `calculate_match_score_for_match`, `get_match_team_stat_counts`, `get_match`, `list_teams`
 - Produces: `GET /matches/<int:match_id>/statistics` → `match_statistics`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `tests/test_match_statistics_page.py`:
 
@@ -1120,13 +1120,13 @@ class MatchStatisticsPageTests(unittest.TestCase):
         self.assertIn("Метрики не настроены", html)
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `python -m unittest tests.test_match_statistics_page.MatchStatisticsPageTests -v`
 
 Expected: FAIL — 404
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Route in `backend/app.py`:
 
@@ -1210,13 +1210,13 @@ Add to `static/app.css`:
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python -m unittest tests.test_match_statistics_page.MatchStatisticsPageTests -v`
 
 Expected: PASS (2 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app.py templates/matches/statistics.html static/app.css tests/test_match_statistics_page.py
@@ -1231,7 +1231,7 @@ git commit -m "feat: add read-only match team statistics page"
 - Modify: `templates/matches/index.html`
 - Test: `tests/test_match_statistics_page.py`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
     def test_matches_list_has_statistics_link(self) -> None:
@@ -1242,13 +1242,13 @@ git commit -m "feat: add read-only match team statistics page"
         self.assertIn("Статистика", html)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python -m unittest tests.test_match_statistics_page.MatchStatisticsPageTests.test_matches_list_has_statistics_link -v`
 
 Expected: FAIL — link absent
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 In `templates/matches/index.html`, add to the actions column:
 
@@ -1256,13 +1256,13 @@ In `templates/matches/index.html`, add to the actions column:
 <a href="{{ url_for('match_statistics', match_id=m.Id) }}">Статистика</a> |
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python -m unittest tests.test_match_statistics_page.MatchStatisticsPageTests.test_matches_list_has_statistics_link -v`
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add templates/matches/index.html tests/test_match_statistics_page.py
@@ -1277,13 +1277,13 @@ git commit -m "feat: add Statistics link on matches list"
 - Modify: `docs/development-context.md`
 - Test: all new test modules
 
-- [ ] **Step 1: Run full test suite**
+- [x] **Step 1: Run full test suite**
 
 Run: `python -m unittest discover -s tests -v`
 
 Expected: all tests PASS (existing + new)
 
-- [ ] **Step 2: Update development-context.md**
+- [x] **Step 2: Update development-context.md**
 
 Add under routes section:
 
@@ -1294,7 +1294,7 @@ Add under routes section:
 
 Add note: match statistics attribute player events via `MatchLineup`; `/reports` unchanged.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/development-context.md
