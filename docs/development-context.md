@@ -86,7 +86,7 @@ python -m backend.app
 | `/` | Главная |
 | `/directories/templates` | Список шаблонов |
 | `/directories/templates/<template_id>` | Категории, действия, подсказки |
-| `/directories/templates/<id>/stat-metrics` | Конструктор командных метрик шаблона (↑/↓, CRUD) |
+| `/directories/templates/<id>/stat-metrics` | Конструктор командных метрик (↑/↓ метрик; CRUD условий; чекбокс «Учитывать события противника») |
 | `/directories/teams` | Команды |
 | `/directories/teams/<team_id>` | Игроки команды (IsActive, показ неактивных) |
 | `/directories/teams/<team_id>/players/<player_id>/edit` | Профиль игрока |
@@ -113,7 +113,7 @@ python -m backend.app
 | CSV колонки | `Тайм, Время, Игрок/Команда, Категория, Действие, Результат, Комментарий` |
 | Автосчёт (Регби-7) | try = 5; conversion* = 2 (*не Failure); `backend/match_score.py` |
 | Счёт в БД | Отображаемый счёт — из событий |
-| Командная статистика матча | Метрики шаблона (`TeamStatMetric`); атрибуция игроков через `MatchLineup` (не `Player.TeamId`); `/reports` без изменений |
+| Командная статистика матча | Метрики шаблона (`TeamStatMetric` + `TeamStatMetricCondition`: Action, OutcomeFilter, perspective `own`/`opponent`; значение = сумма условий); атрибуция игроков через `MatchLineup`; `/reports` без изменений |
 
 Полные требования: `docs/exploration.md`
 
