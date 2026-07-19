@@ -13,7 +13,7 @@
 ## 3. Metric constructor
 
 - [x] 3.1 Update constructor routes to create a metric with its first condition and manage condition CRUD
-- [ ] 3.2 Update the constructor template to display grouped conditions and choose Action, Outcome, and opponent via the “Учитывать события противника” checkbox
+- [x] 3.2 Update the constructor template to display grouped conditions and choose Action, Outcome, and opponent via the “Учитывать события противника” checkbox
 
 ## 4. Verification and documentation
 

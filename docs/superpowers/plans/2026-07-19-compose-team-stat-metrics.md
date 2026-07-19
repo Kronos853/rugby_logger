@@ -1407,7 +1407,7 @@ git commit -m "feat: add stat metric condition routes and perspective parsing"
 - Consumes: `metric_conditions` dict from route (Task 7)
 - Produces: UI with nested condition lists, «Учитывать события противника» checkbox on create/add/edit forms, metric name-only edit
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `StatMetricsConstructorPageTests`:
 
@@ -1438,13 +1438,13 @@ Add to `StatMetricsConstructorPageTests`:
 
 Update `test_stat_metrics_page_renders_create_form` — remove assertion on inline metric `actionId` edit; keep create form fields.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python -m unittest tests.test_match_statistics_page.StatMetricsConstructorPageTests.test_stat_metrics_page_shows_opponent_checkbox_and_conditions -v`
 
 Expected: FAIL — checkbox label or condition routes absent in HTML.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Replace `templates/templates/stat_metrics.html` body with grouped layout:
 
@@ -1546,13 +1546,13 @@ Replace `templates/templates/stat_metrics.html` body with grouped layout:
 {% endblock %}
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python -m unittest tests.test_match_statistics_page.StatMetricsConstructorPageTests -v`
 
 Expected: PASS (all constructor page tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add templates/templates/stat_metrics.html tests/test_match_statistics_page.py
