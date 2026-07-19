@@ -3,6 +3,9 @@
 <p><a href="{{ url_for('matches_page') }}">← Матчи</a></p>
 <h1 class="page-title">Статистика матча</h1>
 
+{% if match.TournamentName %}
+<h2 class="match-statistics__tournament">{{ match.TournamentName }}</h2>
+{% endif %}
 {% include "tagging/_score.html" %}
 
 {% if metric_rows %}

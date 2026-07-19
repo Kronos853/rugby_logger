@@ -357,6 +357,14 @@ button {
   white-space: nowrap;
 }
 
+.match-statistics__tournament {
+  margin: 0 0 8px;
+  color: #495057;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
 .match-statistics {
   overflow-x: auto;
 }

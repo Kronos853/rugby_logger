@@ -216,6 +216,26 @@ class MatchStatisticsPageTests(unittest.TestCase):
             r'<td[^>]*match-statistics__value[^>]*>\s*0\s*</td>',
         )
 
+    def test_statistics_page_shows_tournament_centered_before_score_when_available(self) -> None:
+        resp = self.client.get(f"/matches/{self.match_id}/statistics")
+        html = resp.get_data(as_text=True)
+        self.assertNotIn("match-statistics__tournament", html)
+
+        conn = connect(self.db_path)
+        try:
+            repo.update_match_details(conn, self.match_id, "2026-01-15", "TEST_Cup")
+        finally:
+            conn.close()
+
+        resp = self.client.get(f"/matches/{self.match_id}/statistics")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        tournament_heading = (
+            '<h2 class="match-statistics__tournament">TEST_Cup</h2>'
+        )
+        self.assertIn(tournament_heading, html)
+        self.assertLess(html.index(tournament_heading), html.index('<div class="match-score">'))
+
     def test_empty_metrics_shows_message(self) -> None:
         conn = connect(self.db_path)
         try:
