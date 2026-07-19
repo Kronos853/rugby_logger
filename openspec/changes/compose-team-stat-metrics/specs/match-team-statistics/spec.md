@@ -15,6 +15,10 @@ The system SHALL provide a read-only match team statistics page showing the matc
 - **AND** home and away values are centered in symmetric columns below their team names
 - **AND** metric names are centered below the score
 
+#### Scenario: Metric value is a count
+- **WHEN** a metric is defined for the match’s sport template
+- **THEN** each team column shows an integer count for that metric
+
 #### Scenario: Metric value sums all conditions
 - **WHEN** a metric contains multiple Action/Outcome/perspective conditions
 - **THEN** each team value is the integer sum of the event counts matched by every condition

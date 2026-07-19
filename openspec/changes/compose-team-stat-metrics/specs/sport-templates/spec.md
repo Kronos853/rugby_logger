@@ -7,9 +7,17 @@ The system SHALL allow defining ordered team-statistic metrics on a sport templa
 - **WHEN** the user opens the sport template detail page
 - **THEN** they can navigate to a separate team-statistic metrics page for that template
 
+#### Scenario: Create a metric
+- **WHEN** the user adds a team-statistic metric on the metrics page with a name, action, outcome filter (`any`, `Success`, or `Failure`), and perspective
+- **THEN** the metric and its first condition are stored for that sport template
+
 #### Scenario: Create a metric with its first condition
 - **WHEN** the user creates a team-statistic metric with a name, action, outcome filter, and perspective
 - **THEN** the metric and its first condition are stored for that sport template
+
+#### Scenario: Outcome-specific named metrics
+- **WHEN** the user creates two metrics for the same action with filters `Success` and `Failure` and distinct names
+- **THEN** both metrics are stored and available for match team statistics
 
 #### Scenario: Add multiple conditions
 - **WHEN** the user adds more conditions to an existing metric
@@ -56,6 +64,10 @@ The system SHALL allow defining ordered team-statistic metrics on a sport templa
 - **THEN** that condition is removed
 - **AND** the parent metric is also deleted
 
+#### Scenario: Delete or update a metric
+- **WHEN** the user updates or deletes a team-statistic metric on the metrics page
+- **THEN** the change is persisted and reflected on subsequent match statistics views
+
 #### Scenario: Delete or rename a metric
 - **WHEN** the user deletes or renames a team-statistic metric
 - **THEN** the change is persisted and reflected on subsequent match statistics views
@@ -68,6 +80,11 @@ The system SHALL allow defining ordered team-statistic metrics on a sport templa
 - **WHEN** the database migration processes an existing single-condition metric
 - **THEN** it creates one equivalent condition with perspective `own`
 - **AND** the metric’s match-statistics values remain unchanged
+
+#### Scenario: Cascade metrics when unused action is deleted
+- **WHEN** the user deletes an action that is not referenced by any match events
+- **THEN** conditions that reference that action are deleted
+- **AND** metrics left with no remaining conditions are also deleted
 
 #### Scenario: Cascade one condition when unused action is deleted
 - **WHEN** the user deletes an action that is not referenced by any match events
