@@ -79,19 +79,63 @@ class TeamStatMetricCrudTests(unittest.TestCase):
         except OSError:
             pass
 
+    def test_create_metric_inserts_parent_and_first_condition(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            metric_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Passes", self.action_id, "Success", "own"
+            )
+            metric = repo.get_team_stat_metric(conn, metric_id)
+            assert metric is not None
+            self.assertEqual(metric["Name"], "TEST_Passes")
+            conditions = repo.list_team_stat_metric_conditions(conn, metric_id)
+            self.assertEqual(len(conditions), 1)
+            self.assertEqual(int(conditions[0]["ActionId"]), self.action_id)
+            self.assertEqual(conditions[0]["OutcomeFilter"], "Success")
+            self.assertEqual(conditions[0]["Perspective"], "own")
+            self.assertEqual(int(conditions[0]["SortOrder"]), 0)
+        finally:
+            conn.close()
+
+    def test_create_rejects_invalid_perspective(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            with self.assertRaises(ValueError):
+                repo.create_team_stat_metric(
+                    conn, self.template_id, "TEST_Bad", self.action_id, "any", "both"
+                )
+        finally:
+            conn.close()
+
+    def test_update_metric_name_only(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            metric_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Old", self.action_id, "any", "own"
+            )
+            repo.update_team_stat_metric(conn, metric_id, "TEST_New")
+            row = repo.get_team_stat_metric(conn, metric_id)
+            assert row is not None
+            self.assertEqual(row["Name"], "TEST_New")
+            conditions = repo.list_team_stat_metric_conditions(conn, metric_id)
+            self.assertEqual(conditions[0]["OutcomeFilter"], "any")
+        finally:
+            conn.close()
+
     def test_create_and_list_metrics_ordered_by_sort_order(self) -> None:
         conn = connect(self.db_path)
         try:
             first_id = repo.create_team_stat_metric(
-                conn, self.template_id, "TEST_Passes", self.action_id, "Success"
+                conn, self.template_id, "TEST_Passes", self.action_id, "Success", "own"
             )
             second_id = repo.create_team_stat_metric(
-                conn, self.template_id, "TEST_All passes", self.action_id, "any"
+                conn, self.template_id, "TEST_All passes", self.action_id, "any", "own"
             )
             rows = repo.list_team_stat_metrics(conn, self.template_id)
             self.assertEqual([int(r["Id"]) for r in rows], [first_id, second_id])
             self.assertEqual(rows[0]["Name"], "TEST_Passes")
-            self.assertEqual(rows[0]["OutcomeFilter"], "Success")
+            first_conditions = repo.list_team_stat_metric_conditions(conn, first_id)
+            self.assertEqual(first_conditions[0]["OutcomeFilter"], "Success")
         finally:
             conn.close()
 
@@ -110,19 +154,12 @@ class TeamStatMetricCrudTests(unittest.TestCase):
         finally:
             conn.close()
 
-    def test_update_and_delete_metric(self) -> None:
+    def test_delete_metric(self) -> None:
         conn = connect(self.db_path)
         try:
             metric_id = repo.create_team_stat_metric(
-                conn, self.template_id, "TEST_Old", self.action_id, "any"
+                conn, self.template_id, "TEST_Old", self.action_id, "any", "own"
             )
-            repo.update_team_stat_metric(
-                conn, metric_id, "TEST_New", self.action_id, "Failure"
-            )
-            row = repo.get_team_stat_metric(conn, metric_id)
-            assert row is not None
-            self.assertEqual(row["Name"], "TEST_New")
-            self.assertEqual(row["OutcomeFilter"], "Failure")
             repo.delete_team_stat_metric(conn, metric_id)
             self.assertIsNone(repo.get_team_stat_metric(conn, metric_id))
         finally:
