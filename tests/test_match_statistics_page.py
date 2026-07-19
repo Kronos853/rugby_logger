@@ -138,7 +138,7 @@ class MatchStatisticsPageTests(unittest.TestCase):
                 repo.list_actions_by_category(conn, int(handling["Id"]))[0]["Id"]
             )
             repo.create_team_stat_metric(
-                conn, self.template_id, "TEST_Pass OK", self.action_id, "Success"
+                conn, self.template_id, "TEST_Pass OK", self.action_id, "Success", "own"
             )
             repo.create_event(
                 conn, self.match_id, 1, 0, "player",
@@ -185,6 +185,7 @@ class MatchStatisticsPageTests(unittest.TestCase):
     def test_empty_metrics_shows_message(self) -> None:
         conn = connect(self.db_path)
         try:
+            conn.execute("DELETE FROM TeamStatMetricCondition")
             conn.execute("DELETE FROM TeamStatMetric")
             conn.commit()
         finally:
@@ -200,6 +201,48 @@ class MatchStatisticsPageTests(unittest.TestCase):
         html = resp.get_data(as_text=True)
         self.assertIn(f"/matches/{self.match_id}/statistics", html)
         self.assertIn("Статистика", html)
+
+    def test_statistics_page_reflects_composite_metric(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            conn.execute("DELETE FROM TeamStatMetricCondition")
+            conn.execute("DELETE FROM TeamStatMetric")
+            categories = repo.list_categories_by_template(conn, self.template_id)
+            setpiece = next(c for c in categories if c["Name"] == "Set-piece")
+            scrum_id = int(
+                next(
+                    a["Id"]
+                    for a in repo.list_actions_by_category(conn, int(setpiece["Id"]))
+                    if a["Name"] == "Scrum (own)"
+                )
+            )
+            metric_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Scrums won page", scrum_id, "Success", "own"
+            )
+            repo.create_team_stat_condition(conn, metric_id, scrum_id, "Failure", "opponent")
+            away_player = repo.create_player(conn, self.away_id, "TEST_AwayPlayer", None)
+            repo.add_match_lineup_row(
+                conn, self.match_id, self.away_id, away_player, None, "starter", 1
+            )
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=self.player_home, action_id=scrum_id, outcome="Success",
+            )
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=away_player, action_id=scrum_id, outcome="Failure",
+            )
+        finally:
+            conn.close()
+        resp = self.client.get(f"/matches/{self.match_id}/statistics")
+        html = resp.get_data(as_text=True)
+        self.assertIn("TEST_Scrums won page", html)
+        self.assertRegex(
+            html,
+            r'match-statistics__value[^>]*>\s*2\s*</td>\s*'
+            r'<td[^>]*match-statistics__name[^>]*>\s*TEST_Scrums won page\s*</td>\s*'
+            r'<td[^>]*match-statistics__value[^>]*>\s*0\s*</td>',
+        )
 
 
 if __name__ == "__main__":
