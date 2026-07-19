@@ -235,10 +235,11 @@ button {
 
 .match-statistics__table {
   width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
   table-layout: fixed;
 }
 
-.match-statistics__table th,
 .match-statistics__table td {
   vertical-align: middle;
 }

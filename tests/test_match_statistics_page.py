@@ -114,6 +114,8 @@ class MatchStatisticsPageTests(unittest.TestCase):
         self.assertNotIn("Разметка", html)
         self.assertNotIn(">Метрика<", html)
         self.assertNotIn(">Значение<", html)
+        self.assertEqual(html.count("TEST_Home"), 1)
+        self.assertEqual(html.count("TEST_Away"), 1)
         # One comparison row: home value | metric name | away value
         self.assertRegex(
             html,

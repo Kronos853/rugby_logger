@@ -72,7 +72,8 @@ Route: `GET /matches/<match_id>/statistics`
 
 - Score via existing score helpers / partial patterns
 - One comparison table: home value | metric name | away value (same metric order)
-- Team names as column headers only; no «Метрика» / «Значение» labels
+- No table headers; team names remain only in the score panel
+- Centered table with symmetric home/away value columns
 - Always show configured metrics including 0
 - If no metrics: score + empty-state message
 - No player/comment drill-downs

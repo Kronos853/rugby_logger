@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-{% set home_team = (teams | selectattr("Id", "equalto", match.HomeTeamId) | list | first) %}
-{% set away_team = (teams | selectattr("Id", "equalto", match.AwayTeamId) | list | first) %}
 <p><a href="{{ url_for('matches_page') }}">← Матчи</a></p>
 <h1 class="page-title">Статистика матча</h1>
 
@@ -10,13 +8,6 @@
 {% if metric_rows %}
 <div class="card match-statistics">
   <table class="data-table match-statistics__table">
-    <thead>
-      <tr>
-        <th class="match-statistics__value">{{ home_team.Name if home_team else "Домашние" }}</th>
-        <th class="match-statistics__name"></th>
-        <th class="match-statistics__value">{{ away_team.Name if away_team else "Гости" }}</th>
-      </tr>
-    </thead>
     <tbody>
       {% for row in metric_rows %}
       <tr>
