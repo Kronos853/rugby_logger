@@ -670,7 +670,7 @@ git commit -m "feat: create metric with first condition, name-only update"
   - `delete_team_stat_condition(conn, condition_id: int) -> None` — deletes parent metric when last condition removed
   - `delete_team_stat_metric(conn, metric_id: int) -> None` — unchanged; cascades conditions via FK
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```python
 class TeamStatMetricConditionCrudTests(unittest.TestCase):
@@ -767,13 +767,13 @@ class TeamStatMetricConditionCrudTests(unittest.TestCase):
             conn.close()
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricConditionCrudTests -v`
 
 Expected: FAIL — `create_team_stat_condition` not defined.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 def create_team_stat_condition(
@@ -838,13 +838,13 @@ def delete_team_stat_condition(conn: sqlite3.Connection, condition_id: int) -> N
         delete_team_stat_metric(conn, metric_id)
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricConditionCrudTests -v`
 
 Expected: PASS (4 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/repository.py tests/test_team_stat_metrics.py
