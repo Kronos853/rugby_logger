@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('template_detail', template_id=template.Id) }}">← {{ template.Name }}</a></p>
+<h1 class="page-title">Командные метрики: {{ template.Name }}</h1>
+
+<div class="card">
+  <h3>Новая метрика</h3>
+  <form class="form-row" method="post" action="{{ url_for('template_stat_metrics_create', template_id=template.Id) }}">
+    <input name="name" placeholder="Название метрики" required />
+    <select name="actionId" required>
+      <option value="">Действие</option>
+      {% for action in actions %}
+      <option value="{{ action.Id }}">{{ action.Name }}</option>
+      {% endfor %}
+    </select>
+    <select name="outcomeFilter">
+      <option value="any">Любой исход</option>
+      <option value="Success">Успех</option>
+      <option value="Failure">Неудача</option>
+    </select>
+    <button class="btn btn-primary" type="submit">Добавить</button>
+  </form>
+</div>
+
+<div class="card">
+  <table class="data-table">
+    <thead><tr><th>Название</th><th>Действие</th><th>Исход</th><th></th></tr></thead>
+    <tbody>
+      {% for m in metrics %}
+      <tr>
+        <td colspan="4">
+          <form class="form-row" method="post" action="{{ url_for('template_stat_metrics_update', template_id=template.Id, metric_id=m.Id) }}">
+            <input name="name" value="{{ m.Name }}" />
+            <select name="actionId">
+              {% for action in actions %}
+              <option value="{{ action.Id }}" {% if action.Id == m.ActionId %}selected{% endif %}>{{ action.Name }}</option>
+              {% endfor %}
+            </select>
+            <select name="outcomeFilter">
+              <option value="any" {% if m.OutcomeFilter == 'any' %}selected{% endif %}>Любой</option>
+              <option value="Success" {% if m.OutcomeFilter == 'Success' %}selected{% endif %}>Успех</option>
+              <option value="Failure" {% if m.OutcomeFilter == 'Failure' %}selected{% endif %}>Неудача</option>
+            </select>
+            <button class="btn btn-primary" type="submit">Сохранить</button>
+          </form>
+          <form method="post" action="{{ url_for('template_stat_metrics_move_up', template_id=template.Id, metric_id=m.Id) }}" style="display:inline;">
+            <button class="btn" type="submit">↑</button>
+          </form>
+          <form method="post" action="{{ url_for('template_stat_metrics_move_down', template_id=template.Id, metric_id=m.Id) }}" style="display:inline;">
+            <button class="btn" type="submit">↓</button>
+          </form>
+          <form method="post" action="{{ url_for('template_stat_metrics_delete', template_id=template.Id, metric_id=m.Id) }}" style="display:inline;">
+            <button class="btn btn-danger" type="submit">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4">Метрики не настроены.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

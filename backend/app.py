@@ -164,6 +164,69 @@ def create_app() -> Flask:
             comments=comments,
         )
 
+    @app.get("/directories/templates/<int:template_id>/stat-metrics")
+    def template_stat_metrics(template_id: int):
+        with db() as conn:
+            template = repo.get_sport_template(conn, template_id)
+            if not template:
+                return redirect(url_for("templates_page"))
+            metrics = repo.list_team_stat_metrics(conn, template_id)
+            categories = repo.list_categories_by_template(conn, template_id)
+            actions = []
+            for cat in categories:
+                for action in repo.list_actions_by_category(conn, int(cat["Id"])):
+                    actions.append(action)
+        return render_template(
+            "templates/stat_metrics.html",
+            template=template,
+            metrics=metrics,
+            actions=actions,
+        )
+
+    @app.post("/directories/templates/<int:template_id>/stat-metrics/create")
+    def template_stat_metrics_create(template_id: int):
+        name = request.form.get("name", "").strip()
+        action_id = request.form.get("actionId", type=int)
+        outcome_filter = request.form.get("outcomeFilter", "any")
+        if name and action_id:
+            try:
+                with db() as conn:
+                    repo.create_team_stat_metric(conn, template_id, name, action_id, outcome_filter)
+            except ValueError as exc:
+                flash(str(exc), "error")
+        return redirect(url_for("template_stat_metrics", template_id=template_id))
+
+    @app.post("/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/update")
+    def template_stat_metrics_update(template_id: int, metric_id: int):
+        name = request.form.get("name", "").strip()
+        action_id = request.form.get("actionId", type=int)
+        outcome_filter = request.form.get("outcomeFilter", "any")
+        if name and action_id:
+            try:
+                with db() as conn:
+                    repo.update_team_stat_metric(conn, metric_id, name, action_id, outcome_filter)
+            except ValueError as exc:
+                flash(str(exc), "error")
+        return redirect(url_for("template_stat_metrics", template_id=template_id))
+
+    @app.post("/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/delete")
+    def template_stat_metrics_delete(template_id: int, metric_id: int):
+        with db() as conn:
+            repo.delete_team_stat_metric(conn, metric_id)
+        return redirect(url_for("template_stat_metrics", template_id=template_id))
+
+    @app.post("/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/move-up")
+    def template_stat_metrics_move_up(template_id: int, metric_id: int):
+        with db() as conn:
+            repo.swap_team_stat_metric_order(conn, template_id, metric_id, "up")
+        return redirect(url_for("template_stat_metrics", template_id=template_id))
+
+    @app.post("/directories/templates/<int:template_id>/stat-metrics/<int:metric_id>/move-down")
+    def template_stat_metrics_move_down(template_id: int, metric_id: int):
+        with db() as conn:
+            repo.swap_team_stat_metric_order(conn, template_id, metric_id, "down")
+        return redirect(url_for("template_stat_metrics", template_id=template_id))
+
     @app.post("/directories/templates/<int:template_id>/categories/create")
     def template_create_category(template_id: int):
         name = request.form.get("name", "").strip()
