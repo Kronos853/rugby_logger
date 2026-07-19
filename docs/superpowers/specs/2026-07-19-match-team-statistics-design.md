@@ -2,6 +2,8 @@
 comet_change: match-team-statistics
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-07-19-match-team-statistics
+status: final
 ---
 
 # Match Team Statistics — Technical Design

@@ -1,4 +1,9 @@
-## ADDED Requirements
+# data-export Specification
+
+## Purpose
+CSV import/export of match events for backup and interchange.
+
+## Requirements
 
 ### Requirement: Export Match Events to CSV
 The system SHALL allow users to export all logged events for a specific match to a CSV file.

@@ -1,4 +1,9 @@
-## ADDED Requirements
+# local-server Specification
+
+## Purpose
+Local Flask application server serving pages and APIs from one process.
+
+## Requirements
 
 ### Requirement: Local Application Server
 The system SHALL run as a local Python web server that serves all application pages and API endpoints from a single process.

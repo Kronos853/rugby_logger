@@ -1,5 +1,8 @@
-## ADDED Requirements
+# team-management Specification
 
+## Purpose
+Global team/player directory, saved squads, match creation, and match navigation including team statistics.
+## Requirements
 ### Requirement: Manage Teams
 The system SHALL allow users to create and manage teams in a global directory.
 
@@ -83,3 +86,15 @@ The system SHALL allow users to change a saved squad's name and tournament when 
 #### Scenario: Renaming a squad
 - **WHEN** the user edits the squad name or tournament and saves
 - **THEN** the updated metadata is persisted and shown in the squads list
+
+### Requirement: Match List Statistics Navigation
+The system SHALL provide a Statistics navigation option for each match on the matches list that opens the read-only match team statistics page.
+
+#### Scenario: Statistics link on matches list
+- **WHEN** the user views the matches list
+- **THEN** each match row includes a Statistics control alongside existing match actions
+
+#### Scenario: Navigate to statistics page
+- **WHEN** the user activates Statistics for a match
+- **THEN** the system opens that match’s team statistics page
+

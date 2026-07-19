@@ -1,4 +1,9 @@
-## ADDED Requirements
+# video-tagging Specification
+
+## Purpose
+Two-screen video tagging workflow: control panel, video player sync, and event capture.
+
+## Requirements
 
 ### Requirement: Two-Screen Synchronization
 The system SHALL synchronize video playback state and timestamps between the video player window and the control panel window.

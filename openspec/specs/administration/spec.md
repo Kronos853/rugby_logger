@@ -1,4 +1,9 @@
-## ADDED Requirements
+# administration Specification
+
+## Purpose
+Local administration page for database backup and maintenance.
+
+## Requirements
 
 ### Requirement: Administration Page
 The system SHALL provide an administration page accessible from the main navigation for local database maintenance operations.
