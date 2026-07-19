@@ -863,7 +863,7 @@ git commit -m "feat: add TeamStatMetricCondition CRUD with last-delete cleanup"
 - Consumes: condition CRUD (Task 4), existing event/lineup helpers
 - Produces: same `get_match_team_stat_counts(conn, match_id: int) -> list[dict[str, Any]]` return shape (unchanged for templates)
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Rewrite `TeamStatMetricCountTests.setUp` to use new create signature. Replace/add tests:
 
@@ -949,13 +949,13 @@ Add helper to `TeamStatMetricCountTests`:
 
 Keep existing `test_outcome_filters_and_zeros`, `test_orphan_player_event_ignored`, `test_transfer_does_not_change_counts` — update setUp create calls to include `"own"` perspective.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricCountTests.test_own_and_opponent_conditions -v`
 
 Expected: FAIL — opponent condition not counted toward home.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Replace `get_match_team_stat_counts` body:
 
@@ -1049,13 +1049,13 @@ def get_match_team_stat_counts(conn: sqlite3.Connection, match_id: int) -> list[
     return result
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricCountTests -v`
 
 Expected: PASS (all count tests including migration preservation)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/repository.py tests/test_team_stat_metrics.py
