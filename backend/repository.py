@@ -209,6 +209,41 @@ def delete_team_stat_metric(conn: sqlite3.Connection, metric_id: int) -> None:
     _run(conn, "DELETE FROM TeamStatMetric WHERE Id = ?", (metric_id,))
 
 
+def swap_team_stat_metric_order(
+    conn: sqlite3.Connection,
+    template_id: int,
+    metric_id: int,
+    direction: str,
+) -> None:
+    metrics = list_team_stat_metrics(conn, template_id)
+    ids = [int(m["Id"]) for m in metrics]
+    if metric_id not in ids:
+        raise ValueError("Метрика не найдена.")
+    idx = ids.index(metric_id)
+    if direction == "up":
+        if idx == 0:
+            return
+        neighbor_idx = idx - 1
+    elif direction == "down":
+        if idx == len(ids) - 1:
+            return
+        neighbor_idx = idx + 1
+    else:
+        raise ValueError("Недопустимое направление.")
+    current = metrics[idx]
+    neighbor = metrics[neighbor_idx]
+    _run(
+        conn,
+        "UPDATE TeamStatMetric SET SortOrder = ? WHERE Id = ?",
+        (int(neighbor["SortOrder"]), int(current["Id"])),
+    )
+    _run(
+        conn,
+        "UPDATE TeamStatMetric SET SortOrder = ? WHERE Id = ?",
+        (int(current["SortOrder"]), int(neighbor["Id"])),
+    )
+
+
 def list_comments_by_action(conn: sqlite3.Connection, action_id: int) -> list[sqlite3.Row]:
     return _rows(
         conn, "SELECT * FROM CommentTemplate WHERE ActionId = ? ORDER BY SortOrder, Id", (action_id,)

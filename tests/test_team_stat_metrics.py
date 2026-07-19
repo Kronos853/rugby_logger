@@ -113,6 +113,24 @@ class TeamStatMetricCrudTests(unittest.TestCase):
         finally:
             conn.close()
 
+    def test_swap_metric_order_up_and_down(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            first_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_First", self.action_id, "any"
+            )
+            second_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Second", self.action_id, "any"
+            )
+            repo.swap_team_stat_metric_order(conn, self.template_id, second_id, "up")
+            rows = repo.list_team_stat_metrics(conn, self.template_id)
+            self.assertEqual([int(r["Id"]) for r in rows], [second_id, first_id])
+            repo.swap_team_stat_metric_order(conn, self.template_id, second_id, "down")
+            rows = repo.list_team_stat_metrics(conn, self.template_id)
+            self.assertEqual([int(r["Id"]) for r in rows], [first_id, second_id])
+        finally:
+            conn.close()
+
 
 if __name__ == "__main__":
     unittest.main()
