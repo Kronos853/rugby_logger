@@ -431,19 +431,41 @@ def count_events_by_action(conn: sqlite3.Connection, action_id: int) -> int:
     return int(row["c"]) if row else 0
 
 
-def delete_team_stat_metrics_by_action(conn: sqlite3.Connection, action_id: int) -> None:
-    _run(conn, "DELETE FROM TeamStatMetric WHERE ActionId = ?", (action_id,))
+def delete_team_stat_conditions_by_action(conn: sqlite3.Connection, action_id: int) -> None:
+    _run(conn, "DELETE FROM TeamStatMetricCondition WHERE ActionId = ?", (action_id,))
 
 
-def delete_team_stat_metrics_by_category(conn: sqlite3.Connection, category_id: int) -> None:
+def delete_team_stat_conditions_by_category(conn: sqlite3.Connection, category_id: int) -> None:
     _run(
         conn,
         """
-        DELETE FROM TeamStatMetric
+        DELETE FROM TeamStatMetricCondition
         WHERE ActionId IN (SELECT Id FROM Action WHERE CategoryId = ?)
         """,
         (category_id,),
     )
+
+
+def _delete_empty_team_stat_metrics(conn: sqlite3.Connection) -> None:
+    _run(
+        conn,
+        """
+        DELETE FROM TeamStatMetric
+        WHERE Id NOT IN (
+          SELECT DISTINCT TeamStatMetricId FROM TeamStatMetricCondition
+        )
+        """,
+    )
+
+
+def delete_team_stat_metrics_by_action(conn: sqlite3.Connection, action_id: int) -> None:
+    delete_team_stat_conditions_by_action(conn, action_id)
+    _delete_empty_team_stat_metrics(conn)
+
+
+def delete_team_stat_metrics_by_category(conn: sqlite3.Connection, category_id: int) -> None:
+    delete_team_stat_conditions_by_category(conn, category_id)
+    _delete_empty_team_stat_metrics(conn)
 
 
 def list_comments_by_action(conn: sqlite3.Connection, action_id: int) -> list[sqlite3.Row]:

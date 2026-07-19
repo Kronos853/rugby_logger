@@ -519,6 +519,41 @@ class TeamStatMetricDeleteSafetyTests(unittest.TestCase):
         finally:
             conn.close()
 
+    def test_cascade_only_affected_condition_keeps_composite_metric(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            setpiece = next(
+                c for c in repo.list_categories_by_template(conn, self.template_id)
+                if c["Name"] == "Set-piece"
+            )
+            other_action_id = int(
+                repo.list_actions_by_category(conn, int(setpiece["Id"]))[0]["Id"]
+            )
+            metric_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Composite", self.action_id, "any", "own"
+            )
+            repo.create_team_stat_condition(
+                conn, metric_id, other_action_id, "Success", "own"
+            )
+            repo.delete_action(conn, self.action_id)
+            self.assertIsNotNone(repo.get_team_stat_metric(conn, metric_id))
+            conditions = repo.list_team_stat_metric_conditions(conn, metric_id)
+            self.assertEqual(len(conditions), 1)
+            self.assertEqual(int(conditions[0]["ActionId"]), other_action_id)
+        finally:
+            conn.close()
+
+    def test_remove_metric_when_last_condition_cascaded(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            metric_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Single", self.action_id, "any", "own"
+            )
+            repo.delete_action(conn, self.action_id)
+            self.assertIsNone(repo.get_team_stat_metric(conn, metric_id))
+        finally:
+            conn.close()
+
     def test_block_action_delete_when_used_in_events(self) -> None:
         conn = connect(self.db_path)
         try:
