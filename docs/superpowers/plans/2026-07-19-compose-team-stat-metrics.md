@@ -1723,11 +1723,11 @@ Requirements:
 - Typography hierarchy: metric name > form controls > muted section labels; conditions use slightly smaller font.
 - No behavior changes: all `action=` URLs, input names, checkbox «Учитывать события противника», and button semantics preserved so existing tests keep passing.
 
-- [ ] **Step 1: Write the failing test** — assert each metric block uses the new `stat-metric-card` structure with a header element and grouped conditions container
-- [ ] **Step 2: Run test to verify it fails**
-- [ ] **Step 3: Implement template + CSS changes**
-- [ ] **Step 4: Run the page test suites to verify they pass** (`python -m unittest tests.test_match_statistics_page -v`)
-- [ ] **Step 5: Commit** (`git add templates/templates/stat_metrics.html static/app.css tests/test_match_statistics_page.py && git commit -m "feat: group stat metric constructor blocks visually"`)
+- [x] **Step 1: Write the failing test** — assert each metric block uses the new `stat-metric-card` structure with a header element and grouped conditions container
+- [x] **Step 2: Run test to verify it fails**
+- [x] **Step 3: Implement template + CSS changes**
+- [x] **Step 4: Run the page test suites to verify they pass** (`python -m unittest tests.test_match_statistics_page -v`)
+- [x] **Step 5: Commit** (`git add templates/templates/stat_metrics.html static/app.css tests/test_match_statistics_page.py && git commit -m "feat: group stat metric constructor blocks visually"`)
 
 ---
 

@@ -14,7 +14,7 @@
 
 - [x] 3.1 Update constructor routes to create a metric with its first condition and manage condition CRUD
 - [x] 3.2 Update the constructor template to display grouped conditions and choose Action, Outcome, and opponent via the “Учитывать события противника” checkbox
-- [ ] 3.3 Visually group each metric into its own card with typographic hierarchy and subdued secondary/danger controls on the constructor page
+- [x] 3.3 Visually group each metric into its own card with typographic hierarchy and subdued secondary/danger controls on the constructor page
 
 ## 4. Verification and documentation
 
