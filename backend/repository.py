@@ -358,33 +358,58 @@ def get_match_team_stat_counts(conn: sqlite3.Connection, match_id: int) -> list[
             CASE
               WHEN e.SubjectType = 'team' THEN e.TeamId
               ELSE ml.TeamId
-            END AS TeamId
+            END AS AttributedTeamId
           FROM Event e
           LEFT JOIN MatchLineup ml
             ON ml.MatchId = e.MatchId AND ml.PlayerId = e.PlayerId
           WHERE e.MatchId = ?
+        ),
+        matched AS (
+          SELECT
+            tsm.Id AS MetricId,
+            c.Perspective,
+            a.AttributedTeamId
+          FROM TeamStatMetric tsm
+          INNER JOIN TeamStatMetricCondition c ON c.TeamStatMetricId = tsm.Id
+          INNER JOIN attributed a ON a.ActionId = c.ActionId
+            AND a.AttributedTeamId IS NOT NULL
+            AND (
+              c.OutcomeFilter = 'any'
+              OR a.Outcome = c.OutcomeFilter
+            )
+          WHERE tsm.SportTemplateId = ?
+            AND a.AttributedTeamId IN (?, ?)
         )
         SELECT
-          tsm.Id AS MetricId,
-          a.TeamId,
+          MetricId,
+          CASE
+            WHEN Perspective = 'own' THEN AttributedTeamId
+            WHEN AttributedTeamId = ? THEN ?
+            WHEN AttributedTeamId = ? THEN ?
+            ELSE NULL
+          END AS TargetTeamId,
           COUNT(*) AS Cnt
-        FROM TeamStatMetric tsm
-        INNER JOIN attributed a ON a.ActionId = tsm.ActionId
-          AND a.TeamId IS NOT NULL
-          AND (
-            tsm.OutcomeFilter = 'any'
-            OR a.Outcome = tsm.OutcomeFilter
-          )
-        WHERE tsm.SportTemplateId = ?
-          AND a.TeamId IN (?, ?)
-        GROUP BY tsm.Id, a.TeamId
+        FROM matched
+        GROUP BY MetricId, TargetTeamId
         """,
-        (match_id, template_id, home_team_id, away_team_id),
+        (
+            match_id,
+            template_id,
+            home_team_id,
+            away_team_id,
+            home_team_id,
+            away_team_id,
+            away_team_id,
+            home_team_id,
+        ),
     )
 
     counts: dict[tuple[int, int], int] = {}
     for row in count_rows:
-        counts[(int(row["MetricId"]), int(row["TeamId"]))] = int(row["Cnt"])
+        target_team_id = row["TargetTeamId"]
+        if target_team_id is None:
+            continue
+        counts[(int(row["MetricId"]), int(target_team_id))] = int(row["Cnt"])
 
     result: list[dict[str, Any]] = []
     for metric in metrics:

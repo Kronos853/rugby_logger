@@ -328,10 +328,10 @@ class TeamStatMetricCountTests(unittest.TestCase):
                 repo.list_actions_by_category(conn, int(handling["Id"]))[0]["Id"]
             )
             self.metric_success_id = repo.create_team_stat_metric(
-                conn, self.template_id, "TEST_Pass OK", self.action_id, "Success"
+                conn, self.template_id, "TEST_Pass OK", self.action_id, "Success", "own"
             )
             self.metric_any_id = repo.create_team_stat_metric(
-                conn, self.template_id, "TEST_All passes", self.action_id, "any"
+                conn, self.template_id, "TEST_All passes", self.action_id, "any", "own"
             )
         finally:
             conn.close()
@@ -341,6 +341,79 @@ class TeamStatMetricCountTests(unittest.TestCase):
             os.unlink(self.db_path)
         except OSError:
             pass
+
+    def _get_action_by_name(self, conn, name: str) -> int:
+        categories = repo.list_categories_by_template(conn, self.template_id)
+        for category in categories:
+            for action in repo.list_actions_by_category(conn, int(category["Id"])):
+                if action["Name"] == name:
+                    return int(action["Id"])
+        raise AssertionError(f"Action not found: {name}")
+
+    def test_legacy_migration_counts_unchanged(self) -> None:
+        migration = TeamStatMetricMigrationTests()
+        migration.setUp()
+        try:
+            _, metric_id, match_id, _ = migration._seed_legacy_metric_db()
+            ensure_db(migration.db_path)
+            conn = connect(migration.db_path)
+            try:
+                rows = repo.get_match_team_stat_counts(conn, match_id)
+                by_id = {r["metric_id"]: r for r in rows}
+                self.assertEqual(by_id[metric_id]["home_count"], 1)
+                self.assertEqual(by_id[metric_id]["away_count"], 0)
+            finally:
+                conn.close()
+        finally:
+            migration.tearDown()
+
+    def test_own_and_opponent_conditions(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            repo.delete_team_stat_metric(conn, self.metric_success_id)
+            repo.delete_team_stat_metric(conn, self.metric_any_id)
+            scrum_action = self._get_action_by_name(conn, "Scrum (own)")
+            metric_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Scrums won", scrum_action, "Success", "own"
+            )
+            repo.create_team_stat_condition(
+                conn, metric_id, scrum_action, "Failure", "opponent"
+            )
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=self.player_home, action_id=scrum_action, outcome="Success",
+            )
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=self.player_away, action_id=scrum_action, outcome="Failure",
+            )
+            rows = repo.get_match_team_stat_counts(conn, self.match_id)
+            row = next(r for r in rows if r["metric_id"] == metric_id)
+            self.assertEqual(row["home_count"], 2)  # home Success + away Failure (opponent)
+            self.assertEqual(row["away_count"], 0)
+        finally:
+            conn.close()
+
+    def test_overlapping_conditions_are_additive(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            repo.delete_team_stat_metric(conn, self.metric_success_id)
+            repo.delete_team_stat_metric(conn, self.metric_any_id)
+            metric_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Double", self.action_id, "Success", "own"
+            )
+            repo.create_team_stat_condition(
+                conn, metric_id, self.action_id, "any", "own"
+            )
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=self.player_home, action_id=self.action_id, outcome="Success",
+            )
+            rows = repo.get_match_team_stat_counts(conn, self.match_id)
+            row = next(r for r in rows if r["metric_id"] == metric_id)
+            self.assertEqual(row["home_count"], 2)
+        finally:
+            conn.close()
 
     def test_outcome_filters_and_zeros(self) -> None:
         conn = connect(self.db_path)
