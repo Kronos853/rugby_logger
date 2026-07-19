@@ -132,5 +132,107 @@ class TeamStatMetricCrudTests(unittest.TestCase):
             conn.close()
 
 
+class TeamStatMetricCountTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        self._tmp.close()
+        self.db_path = Path(self._tmp.name)
+        ensure_db(self.db_path)
+        conn = connect(self.db_path)
+        try:
+            ensure_seeded(conn)
+            template = repo.get_sport_template_by_name(conn, "Регби-7")
+            assert template is not None
+            self.template_id = int(template["Id"])
+            self.home_id = repo.create_team(conn, "TEST_Home")
+            self.away_id = repo.create_team(conn, "TEST_Away")
+            self.player_home = repo.create_player(conn, self.home_id, "TEST_HomePlayer", None)
+            self.player_away = repo.create_player(conn, self.away_id, "TEST_AwayPlayer", None)
+            self.match_id = repo.create_match(
+                conn, self.template_id, self.home_id, self.away_id, "2026-01-15", None, None, None
+            )
+            repo.add_match_lineup_row(
+                conn, self.match_id, self.home_id, self.player_home, None, "starter", 0
+            )
+            repo.add_match_lineup_row(
+                conn, self.match_id, self.away_id, self.player_away, None, "starter", 0
+            )
+            categories = repo.list_categories_by_template(conn, self.template_id)
+            handling = next(c for c in categories if c["Name"] == "Handling")
+            self.action_id = int(
+                repo.list_actions_by_category(conn, int(handling["Id"]))[0]["Id"]
+            )
+            self.metric_success_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Pass OK", self.action_id, "Success"
+            )
+            self.metric_any_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_All passes", self.action_id, "any"
+            )
+        finally:
+            conn.close()
+
+    def tearDown(self) -> None:
+        try:
+            os.unlink(self.db_path)
+        except OSError:
+            pass
+
+    def test_outcome_filters_and_zeros(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=self.player_home, action_id=self.action_id, outcome="Success",
+            )
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=self.player_home, action_id=self.action_id, outcome="Failure",
+            )
+            repo.create_event(
+                conn, self.match_id, 1, 0, "team",
+                team_id=self.away_id, action_id=self.action_id, outcome="Success",
+            )
+            rows = repo.get_match_team_stat_counts(conn, self.match_id)
+            by_id = {r["metric_id"]: r for r in rows}
+            self.assertEqual(by_id[self.metric_success_id]["home_count"], 1)
+            self.assertEqual(by_id[self.metric_success_id]["away_count"], 1)
+            self.assertEqual(by_id[self.metric_any_id]["home_count"], 2)
+            self.assertEqual(by_id[self.metric_any_id]["away_count"], 1)
+        finally:
+            conn.close()
+
+    def test_orphan_player_event_ignored(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            orphan_id = repo.create_player(conn, self.home_id, "TEST_Orphan", None)
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=orphan_id, action_id=self.action_id, outcome="Success",
+            )
+            rows = repo.get_match_team_stat_counts(conn, self.match_id)
+            self.assertTrue(all(r["home_count"] == 0 and r["away_count"] == 0 for r in rows))
+        finally:
+            conn.close()
+
+    def test_transfer_does_not_change_counts(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=self.player_home, action_id=self.action_id, outcome="Success",
+            )
+            before = repo.get_match_team_stat_counts(conn, self.match_id)
+            # Simulate transfer: Player.TeamId changes; MatchLineup attribution must stay.
+            conn.execute(
+                "UPDATE Player SET TeamId = ? WHERE Id = ?",
+                (self.away_id, self.player_home),
+            )
+            conn.commit()
+            after = repo.get_match_team_stat_counts(conn, self.match_id)
+            self.assertEqual(before, after)
+        finally:
+            conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -244,6 +244,70 @@ def swap_team_stat_metric_order(
     )
 
 
+def get_match_team_stat_counts(conn: sqlite3.Connection, match_id: int) -> list[dict[str, Any]]:
+    match = get_match(conn, match_id)
+    if not match:
+        return []
+    template_id = int(match["SportTemplateId"])
+    home_team_id = int(match["HomeTeamId"])
+    away_team_id = int(match["AwayTeamId"])
+    metrics = list_team_stat_metrics(conn, template_id)
+    if not metrics:
+        return []
+
+    count_rows = _rows(
+        conn,
+        """
+        WITH attributed AS (
+          SELECT
+            e.ActionId,
+            e.Outcome,
+            CASE
+              WHEN e.SubjectType = 'team' THEN e.TeamId
+              ELSE ml.TeamId
+            END AS TeamId
+          FROM Event e
+          LEFT JOIN MatchLineup ml
+            ON ml.MatchId = e.MatchId AND ml.PlayerId = e.PlayerId
+          WHERE e.MatchId = ?
+        )
+        SELECT
+          tsm.Id AS MetricId,
+          a.TeamId,
+          COUNT(*) AS Cnt
+        FROM TeamStatMetric tsm
+        INNER JOIN attributed a ON a.ActionId = tsm.ActionId
+          AND a.TeamId IS NOT NULL
+          AND (
+            tsm.OutcomeFilter = 'any'
+            OR a.Outcome = tsm.OutcomeFilter
+          )
+        WHERE tsm.SportTemplateId = ?
+          AND a.TeamId IN (?, ?)
+        GROUP BY tsm.Id, a.TeamId
+        """,
+        (match_id, template_id, home_team_id, away_team_id),
+    )
+
+    counts: dict[tuple[int, int], int] = {}
+    for row in count_rows:
+        counts[(int(row["MetricId"]), int(row["TeamId"]))] = int(row["Cnt"])
+
+    result: list[dict[str, Any]] = []
+    for metric in metrics:
+        metric_id = int(metric["Id"])
+        result.append(
+            {
+                "metric_id": metric_id,
+                "name": str(metric["Name"]),
+                "sort_order": int(metric["SortOrder"]),
+                "home_count": counts.get((metric_id, home_team_id), 0),
+                "away_count": counts.get((metric_id, away_team_id), 0),
+            }
+        )
+    return result
+
+
 def list_comments_by_action(conn: sqlite3.Connection, action_id: int) -> list[sqlite3.Row]:
     return _rows(
         conn, "SELECT * FROM CommentTemplate WHERE ActionId = ? ORDER BY SortOrder, Id", (action_id,)
