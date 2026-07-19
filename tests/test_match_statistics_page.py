@@ -116,6 +116,14 @@ class MatchStatisticsPageTests(unittest.TestCase):
         self.assertNotIn(">Значение<", html)
         self.assertEqual(html.count("TEST_Home"), 1)
         self.assertEqual(html.count("TEST_Away"), 1)
+        self.assertRegex(
+            html,
+            r'<colgroup>\s*'
+            r'<col class="match-statistics__team-column"\s*/>\s*'
+            r'<col class="match-statistics__metric-column"\s*/>\s*'
+            r'<col class="match-statistics__team-column"\s*/>\s*'
+            r'</colgroup>',
+        )
         # One comparison row: home value | metric name | away value
         self.assertRegex(
             html,

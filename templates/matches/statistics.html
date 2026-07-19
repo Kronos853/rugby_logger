@@ -8,6 +8,11 @@
 {% if metric_rows %}
 <div class="card match-statistics">
   <table class="data-table match-statistics__table">
+    <colgroup>
+      <col class="match-statistics__team-column" />
+      <col class="match-statistics__metric-column" />
+      <col class="match-statistics__team-column" />
+    </colgroup>
     <tbody>
       {% for row in metric_rows %}
       <tr>

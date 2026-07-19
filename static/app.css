@@ -235,9 +235,15 @@ button {
 
 .match-statistics__table {
   width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
   table-layout: fixed;
+}
+
+.match-statistics__team-column {
+  width: 40%;
+}
+
+.match-statistics__metric-column {
+  width: 20%;
 }
 
 .match-statistics__table td {
@@ -245,14 +251,12 @@ button {
 }
 
 .match-statistics__value {
-  width: 22%;
   text-align: center;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
 
 .match-statistics__name {
-  width: 56%;
   text-align: center;
   font-weight: 500;
 }
