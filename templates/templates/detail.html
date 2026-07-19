@@ -6,6 +6,10 @@
 
 <h1 class="page-title">Категории и действия: {{ template.Name }}</h1>
 
+<p>
+  <a href="{{ url_for('template_stat_metrics', template_id=template.Id) }}">Командные метрики</a>
+</p>
+
 
 
 <div class="card">
