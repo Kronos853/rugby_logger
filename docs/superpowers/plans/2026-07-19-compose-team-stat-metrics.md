@@ -1703,6 +1703,34 @@ git commit -m "docs: document composite team stat metric semantics"
 
 ---
 
+### Task 11: Constructor page visual grouping and typography
+
+**Files:**
+- Modify: `templates/templates/stat_metrics.html` — per-metric card structure, header row, grouped condition rows
+- Modify: `static/app.css` — metric card, header, condition list, subdued ghost/danger button styles
+- Test: `tests/test_match_statistics_page.py` — extend `StatMetricsConstructorPageTests` with structural grouping assertions
+
+**Interfaces:**
+- Consumes: existing routes and form fields from Task 7/8 (no route or field changes)
+- Produces: presentational structure only; all existing form actions, names, and Russian labels unchanged
+
+Requirements:
+- Each metric renders inside its own visually separated card block (`stat-metric-card`) with clear spacing between metrics.
+- Metric header row: metric name as a prominent heading; inline rename input; ↑/↓ and «Удалить метрику» styled as subdued ghost controls (no bright red/blue fill).
+- Conditions render as an indented, visually secondary group under a muted «Условия» label; per-condition save keeps primary style but small; condition delete is a subdued ghost-danger control.
+- «Добавить условие» form visually tertiary (muted background or dashed separator), clearly inside the metric card.
+- «Новая метрика» creation form stays in its own card at the top, unchanged fields.
+- Typography hierarchy: metric name > form controls > muted section labels; conditions use slightly smaller font.
+- No behavior changes: all `action=` URLs, input names, checkbox «Учитывать события противника», and button semantics preserved so existing tests keep passing.
+
+- [ ] **Step 1: Write the failing test** — assert each metric block uses the new `stat-metric-card` structure with a header element and grouped conditions container
+- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 3: Implement template + CSS changes**
+- [ ] **Step 4: Run the page test suites to verify they pass** (`python -m unittest tests.test_match_statistics_page -v`)
+- [ ] **Step 5: Commit** (`git add templates/templates/stat_metrics.html static/app.css tests/test_match_statistics_page.py && git commit -m "feat: group stat metric constructor blocks visually"`)
+
+---
+
 ## Self-Review Checklist
 
 | Spec requirement | Task |

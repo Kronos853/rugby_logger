@@ -27,6 +27,12 @@ The system SHALL allow defining ordered team-statistic metrics on a sport templa
 - **THEN** the constructor displays them in insertion order
 - **AND** does not offer condition up/down controls
 
+#### Scenario: Visual metric grouping
+- **WHEN** the constructor page lists metrics
+- **THEN** each metric is rendered as its own visually separated block
+- **AND** the metric name is typographically dominant over its condition rows
+- **AND** destructive and reorder controls are visually subdued relative to primary actions
+
 #### Scenario: Metric ordering
 - **WHEN** metrics are defined with sort order
 - **THEN** the match statistics page lists them in that order
