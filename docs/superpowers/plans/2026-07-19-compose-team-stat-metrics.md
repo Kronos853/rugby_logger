@@ -477,7 +477,7 @@ git commit -m "feat: migrate legacy TeamStatMetric rows to conditions"
   - `create_team_stat_metric(conn, template_id: int, name: str, action_id: int, outcome_filter: str, perspective: str = "own") -> int` — inserts parent + first condition atomically
   - `update_team_stat_metric(conn, metric_id: int, name: str) -> None` — name only
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Update `TeamStatMetricCrudTests` — replace existing CRUD tests:
 
@@ -549,13 +549,13 @@ Update `test_create_and_list_metrics_ordered_by_sort_order` to use new signature
 
 Remove or rewrite `test_update_and_delete_metric` (delete stays; update moves to name-only test above).
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricCrudTests.test_create_metric_inserts_parent_and_first_condition -v`
 
 Expected: FAIL — `list_team_stat_metric_conditions` missing or insert still targets legacy columns.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Add to `backend/repository.py`:
 
@@ -641,13 +641,13 @@ def update_team_stat_metric(conn: sqlite3.Connection, metric_id: int, name: str)
     )
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricCrudTests -v`
 
 Expected: PASS for updated CRUD tests (reorder tests may still pass unchanged).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/repository.py tests/test_team_stat_metrics.py
