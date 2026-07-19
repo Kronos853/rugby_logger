@@ -236,6 +236,68 @@ def update_team_stat_metric(conn: sqlite3.Connection, metric_id: int, name: str)
     )
 
 
+def create_team_stat_condition(
+    conn: sqlite3.Connection,
+    metric_id: int,
+    action_id: int,
+    outcome_filter: str,
+    perspective: str,
+) -> int:
+    metric = get_team_stat_metric(conn, metric_id)
+    if not metric:
+        raise ValueError("Метрика не найдена.")
+    template_id = int(metric["SportTemplateId"])
+    _validate_condition_fields(conn, template_id, action_id, outcome_filter, perspective)
+    existing = list_team_stat_metric_conditions(conn, metric_id)
+    sort_order = (max(int(c["SortOrder"]) for c in existing) + 1) if existing else 0
+    return _insert(
+        conn,
+        """INSERT INTO TeamStatMetricCondition
+           (TeamStatMetricId, ActionId, OutcomeFilter, Perspective, SortOrder)
+           VALUES (?, ?, ?, ?, ?)""",
+        (metric_id, action_id, outcome_filter, perspective, sort_order),
+    )
+
+
+def update_team_stat_condition(
+    conn: sqlite3.Connection,
+    condition_id: int,
+    action_id: int,
+    outcome_filter: str,
+    perspective: str,
+) -> None:
+    condition = get_team_stat_metric_condition(conn, condition_id)
+    if not condition:
+        raise ValueError("Условие не найдено.")
+    metric = get_team_stat_metric(conn, int(condition["TeamStatMetricId"]))
+    assert metric is not None
+    _validate_condition_fields(
+        conn, int(metric["SportTemplateId"]), action_id, outcome_filter, perspective
+    )
+    _run(
+        conn,
+        """UPDATE TeamStatMetricCondition
+           SET ActionId = ?, OutcomeFilter = ?, Perspective = ?
+           WHERE Id = ?""",
+        (action_id, outcome_filter, perspective, condition_id),
+    )
+
+
+def delete_team_stat_condition(conn: sqlite3.Connection, condition_id: int) -> None:
+    condition = get_team_stat_metric_condition(conn, condition_id)
+    if not condition:
+        return
+    metric_id = int(condition["TeamStatMetricId"])
+    remaining = [
+        c
+        for c in list_team_stat_metric_conditions(conn, metric_id)
+        if int(c["Id"]) != condition_id
+    ]
+    _run(conn, "DELETE FROM TeamStatMetricCondition WHERE Id = ?", (condition_id,))
+    if not remaining:
+        delete_team_stat_metric(conn, metric_id)
+
+
 def delete_team_stat_metric(conn: sqlite3.Connection, metric_id: int) -> None:
     _run(conn, "DELETE FROM TeamStatMetric WHERE Id = ?", (metric_id,))
 

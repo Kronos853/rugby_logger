@@ -203,6 +203,100 @@ class TeamStatMetricCrudTests(unittest.TestCase):
             conn.close()
 
 
+class TeamStatMetricConditionCrudTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        self._tmp.close()
+        self.db_path = Path(self._tmp.name)
+        ensure_db(self.db_path)
+        conn = connect(self.db_path)
+        try:
+            ensure_seeded(conn)
+            template = repo.get_sport_template_by_name(conn, "Регби-7")
+            assert template is not None
+            self.template_id = int(template["Id"])
+            categories = repo.list_categories_by_template(conn, self.template_id)
+            handling = next(c for c in categories if c["Name"] == "Handling")
+            self.action_id = int(
+                repo.list_actions_by_category(conn, int(handling["Id"]))[0]["Id"]
+            )
+            setpiece = next(c for c in categories if c["Name"] == "Set-piece")
+            self.other_action_id = int(
+                repo.list_actions_by_category(conn, int(setpiece["Id"]))[0]["Id"]
+            )
+            self.metric_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_Composite", self.action_id, "Success", "own"
+            )
+        finally:
+            conn.close()
+
+    def tearDown(self) -> None:
+        try:
+            os.unlink(self.db_path)
+        except OSError:
+            pass
+
+    def test_add_condition_appends_sort_order(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            second_id = repo.create_team_stat_condition(
+                conn, self.metric_id, self.other_action_id, "Failure", "opponent"
+            )
+            conditions = repo.list_team_stat_metric_conditions(conn, self.metric_id)
+            self.assertEqual(len(conditions), 2)
+            self.assertEqual(int(conditions[1]["Id"]), second_id)
+            self.assertEqual(int(conditions[1]["SortOrder"]), 1)
+            self.assertEqual(conditions[1]["Perspective"], "opponent")
+        finally:
+            conn.close()
+
+    def test_update_condition(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            condition_id = int(
+                repo.list_team_stat_metric_conditions(conn, self.metric_id)[0]["Id"]
+            )
+            repo.update_team_stat_condition(
+                conn, condition_id, self.other_action_id, "Failure", "opponent"
+            )
+            row = repo.get_team_stat_metric_condition(conn, condition_id)
+            assert row is not None
+            self.assertEqual(int(row["ActionId"]), self.other_action_id)
+            self.assertEqual(row["OutcomeFilter"], "Failure")
+            self.assertEqual(row["Perspective"], "opponent")
+        finally:
+            conn.close()
+
+    def test_delete_non_last_condition_keeps_metric(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            repo.create_team_stat_condition(
+                conn, self.metric_id, self.other_action_id, "any", "own"
+            )
+            first_id = int(
+                repo.list_team_stat_metric_conditions(conn, self.metric_id)[0]["Id"]
+            )
+            repo.delete_team_stat_condition(conn, first_id)
+            self.assertIsNotNone(repo.get_team_stat_metric(conn, self.metric_id))
+            self.assertEqual(len(repo.list_team_stat_metric_conditions(conn, self.metric_id)), 1)
+        finally:
+            conn.close()
+
+    def test_delete_last_condition_deletes_metric(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            condition_id = int(
+                repo.list_team_stat_metric_conditions(conn, self.metric_id)[0]["Id"]
+            )
+            repo.delete_team_stat_condition(conn, condition_id)
+            self.assertIsNone(repo.get_team_stat_metric(conn, self.metric_id))
+            self.assertEqual(
+                repo.list_team_stat_metric_conditions(conn, self.metric_id), []
+            )
+        finally:
+            conn.close()
+
+
 class TeamStatMetricCountTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
