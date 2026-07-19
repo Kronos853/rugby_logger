@@ -188,7 +188,7 @@ git commit -m "feat: add TeamStatMetricCondition schema for fresh installs"
 - Consumes: legacy `TeamStatMetric` with `ActionId`/`OutcomeFilter` (pre-change DBs)
 - Produces: migrated DB with conditions + rebuilt parent; `_pending_migrations` returns False after migration
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `tests/test_team_stat_metrics.py`:
 
@@ -363,13 +363,13 @@ class TeamStatMetricMigrationTests(unittest.TestCase):
             conn.close()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricMigrationTests.test_legacy_metric_migrates_to_own_condition_with_same_counts -v`
 
 Expected: FAIL — `ActionId` still on `TeamStatMetric`; no `TeamStatMetricCondition` rows.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Add to `backend/db.py`:
 
@@ -447,13 +447,13 @@ Call from `_apply_migrations` after `_migrate_team_stat_metrics`:
     _migrate_team_stat_metric_conditions(conn)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python -m unittest tests.test_team_stat_metrics.TeamStatMetricMigrationTests.test_legacy_metric_migrates_to_own_condition_with_same_counts -v`
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/db.py tests/test_team_stat_metrics.py
