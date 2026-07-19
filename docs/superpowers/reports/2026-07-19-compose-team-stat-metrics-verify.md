@@ -69,6 +69,20 @@ Diff since that review: only Task 10 checkoff chore commit — no implementation
 |----------|------|-----------|
 | Minor | No direct `_pending_migrations() is False` assertion after migration | Schema/row assertions cover upgrade outcome; not a merge blocker |
 
+## Re-verification after Task 11 (constructor visual grouping)
+
+Archive was reopened (verify-fail #1) after user feedback about visual clutter on the constructor page. Task 11 added per-metric card grouping and typographic hierarchy.
+
+| # | Check | Result |
+|---|--------|--------|
+| 1 | All `tasks.md` items `[x]` | PASS (11/11, incl. 3.3) |
+| 2 | Delta spec scenario "Visual metric grouping" covered | PASS — `stat-metric-card` / `stat-metric-header` / `stat-conditions` structure, ghost/ghost-danger controls in `templates/templates/stat_metrics.html` + `static/app.css` |
+| 3 | No behavior changes (form actions, input names, checkbox) | PASS — reviewer diff check; structural tests only |
+| 4 | Isolated suite | PASS — `python -m unittest discover -s tests -v` → Ran 47 tests, OK (fresh run during re-verify) |
+| 5 | Code review | Approve — 0 Critical/Important, 2 Minor (empty state outside `.card`; test doesn't assert ghost classes), 3 Nit — accepted |
+
+Accepted deviations (Minor, presentational/test-coverage only): empty-state paragraph not wrapped in a card; structural test omits ghost-button class assertions.
+
 ## Verdict
 
-Verification **PASS**. Ready for `comet guard verify --apply` → archive phase (archive still requires explicit user confirmation).
+Verification **PASS** (initial + Task 11 re-verification). Ready for `comet guard verify --apply` → archive phase (archive still requires explicit user confirmation).
