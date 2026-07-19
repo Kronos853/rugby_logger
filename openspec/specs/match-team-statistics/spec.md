@@ -4,7 +4,7 @@
 TBD - created by archiving change match-team-statistics. Update Purpose after archive.
 ## Requirements
 ### Requirement: Match Team Statistics Page
-The system SHALL provide a read-only match team statistics page showing the match score and per-team metric counts for both home and away teams. Each displayed metric value SHALL equal the sum of all configured conditions for that metric.
+The system SHALL provide a read-only match team statistics page showing the match tournament when available, the match score, and per-team metric counts for both home and away teams. Each displayed metric value SHALL equal the sum of all configured conditions for that metric.
 
 #### Scenario: Open statistics from matches list
 - **WHEN** the user opens a match’s statistics page from the matches list
@@ -17,6 +17,15 @@ The system SHALL provide a read-only match team statistics page showing the matc
 - **AND** the comparison table has no headers because team names are already shown in the score panel
 - **AND** home and away values are centered in symmetric columns below their team names
 - **AND** metric names are centered below the score
+
+#### Scenario: Tournament above score
+- **WHEN** the statistics page loads for a match with a tournament
+- **THEN** the tournament name is displayed centered immediately above the score
+
+#### Scenario: Match without tournament
+- **WHEN** the statistics page loads for a match without a tournament
+- **THEN** no empty tournament heading is displayed
+- **AND** the score remains displayed
 
 #### Scenario: Metric value is a count
 - **WHEN** a metric is defined for the match’s sport template
