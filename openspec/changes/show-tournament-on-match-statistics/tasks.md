@@ -5,4 +5,4 @@
 
 ## 2. Verification
 
-- [ ] 2.1 Run the focused match-statistics tests and the full isolated test suite
+- [x] 2.1 Run the focused match-statistics tests and the full isolated test suite
