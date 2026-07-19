@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
+{% set home_team = (teams | selectattr("Id", "equalto", match.HomeTeamId) | list | first) %}
+{% set away_team = (teams | selectattr("Id", "equalto", match.AwayTeamId) | list | first) %}
 <p><a href="{{ url_for('matches_page') }}">← Матчи</a></p>
 <h1 class="page-title">Статистика матча</h1>
 
@@ -7,28 +9,24 @@
 
 {% if metric_rows %}
 <div class="card match-statistics">
-  <div class="match-statistics__col">
-    <h3>{{ (teams | selectattr("Id", "equalto", match.HomeTeamId) | list | first).Name }}</h3>
-    <table class="data-table">
-      <thead><tr><th>Метрика</th><th>Значение</th></tr></thead>
-      <tbody>
-        {% for row in metric_rows %}
-        <tr><td>{{ row.name }}</td><td>{{ row.home_count }}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  <div class="match-statistics__col">
-    <h3>{{ (teams | selectattr("Id", "equalto", match.AwayTeamId) | list | first).Name }}</h3>
-    <table class="data-table">
-      <thead><tr><th>Метрика</th><th>Значение</th></tr></thead>
-      <tbody>
-        {% for row in metric_rows %}
-        <tr><td>{{ row.name }}</td><td>{{ row.away_count }}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <table class="data-table match-statistics__table">
+    <thead>
+      <tr>
+        <th class="match-statistics__value">{{ home_team.Name if home_team else "Домашние" }}</th>
+        <th class="match-statistics__name"></th>
+        <th class="match-statistics__value">{{ away_team.Name if away_team else "Гости" }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in metric_rows %}
+      <tr>
+        <td class="match-statistics__value">{{ row.home_count }}</td>
+        <td class="match-statistics__name">{{ row.name }}</td>
+        <td class="match-statistics__value">{{ row.away_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% else %}
 <div class="card"><p>Метрики не настроены для шаблона этого матча.</p></div>

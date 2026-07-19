@@ -230,19 +230,30 @@ button {
 }
 
 .match-statistics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  overflow-x: auto;
 }
 
-.match-statistics__col h3 {
-  margin-top: 0;
+.match-statistics__table {
+  width: 100%;
+  table-layout: fixed;
 }
 
-@media (max-width: 900px) {
-  .match-statistics {
-    grid-template-columns: 1fr;
-  }
+.match-statistics__table th,
+.match-statistics__table td {
+  vertical-align: middle;
+}
+
+.match-statistics__value {
+  width: 22%;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.match-statistics__name {
+  width: 56%;
+  text-align: center;
+  font-weight: 500;
 }
 
 .report-match-section {

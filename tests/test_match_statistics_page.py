@@ -112,6 +112,15 @@ class MatchStatisticsPageTests(unittest.TestCase):
         self.assertIn("TEST_Pass OK", html)
         self.assertIn("match-statistics", html)
         self.assertNotIn("Разметка", html)
+        self.assertNotIn(">Метрика<", html)
+        self.assertNotIn(">Значение<", html)
+        # One comparison row: home value | metric name | away value
+        self.assertRegex(
+            html,
+            r'match-statistics__value[^>]*>\s*1\s*</td>\s*'
+            r'<td[^>]*match-statistics__name[^>]*>\s*TEST_Pass OK\s*</td>\s*'
+            r'<td[^>]*match-statistics__value[^>]*>\s*0\s*</td>',
+        )
 
     def test_empty_metrics_shows_message(self) -> None:
         conn = connect(self.db_path)

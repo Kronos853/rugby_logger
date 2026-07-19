@@ -7,7 +7,7 @@ Constraints: SQL only in `repository.py`; sync `docs/schema.sql` with `backend/d
 ## Goals / Non-Goals
 
 **Goals:**
-- Read-only match statistics page with score + two team columns
+- Read-only match statistics page with score + comparison rows (home value | metric | away value)
 - Template-scoped metric definitions on a dedicated constructor page
 - Transfer-stable counts via MatchLineup attribution
 - Empty-metric and zero-value behaviors as agreed
