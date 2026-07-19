@@ -1570,7 +1570,7 @@ git commit -m "feat: show composite conditions in stat metrics constructor"
 **Interfaces:**
 - Consumes: composite aggregation (Task 5)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Update `MatchStatisticsPageTests.setUp`:
 
@@ -1643,23 +1643,23 @@ Add composite page smoke test:
         )
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `python -m unittest tests.test_match_statistics_page.MatchStatisticsPageTests.test_statistics_page_reflects_composite_metric -v`
 
 Expected: FAIL until Tasks 5–8 complete; FAIL on setUp if old create signature used.
 
-- [ ] **Step 3: Fix test setup only (no production code)**
+- [x] **Step 3: Fix test setup only (no production code)**
 
 Apply setUp and empty-metrics fixes above; ensure `self.away_id` exists in setUp (add `self.away_id = repo.create_team(conn, "TEST_Away")` if missing).
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python -m unittest tests.test_match_statistics_page.MatchStatisticsPageTests -v`
 
 Expected: PASS (4 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/test_match_statistics_page.py
