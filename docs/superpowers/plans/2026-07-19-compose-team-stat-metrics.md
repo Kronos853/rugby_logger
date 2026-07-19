@@ -1200,7 +1200,7 @@ git commit -m "feat: cascade action delete through stat metric conditions"
   - `POST .../stat-metrics/<metric_id>/conditions/<condition_id>/delete`
   - Existing delete/move-up/move-down unchanged
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `tests/test_match_statistics_page.py`:
 
@@ -1229,13 +1229,13 @@ Add to `tests/test_match_statistics_page.py`:
 
 Note: use a real `actionId` from seeded template in setUp (store `self.action_id` like count tests).
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python -m unittest tests.test_match_statistics_page.StatMetricsConstructorPageTests.test_create_metric_with_opponent_checkbox -v`
 
 Expected: FAIL — perspective stored as `own` or route ignores checkbox.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Update `template_stat_metrics` to load conditions per metric:
 
@@ -1382,13 +1382,13 @@ Add condition routes:
         return redirect(url_for("template_stat_metrics", template_id=template_id))
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python -m unittest tests.test_match_statistics_page.StatMetricsConstructorPageTests.test_create_metric_with_opponent_checkbox -v`
 
 Expected: PASS (after Task 8 template renders checkbox — may need both tasks for full pass; route logic sufficient for DB assertion)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app.py tests/test_match_statistics_page.py
