@@ -234,5 +234,79 @@ class TeamStatMetricCountTests(unittest.TestCase):
             conn.close()
 
 
+class TeamStatMetricDeleteSafetyTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        self._tmp.close()
+        self.db_path = Path(self._tmp.name)
+        ensure_db(self.db_path)
+        conn = connect(self.db_path)
+        try:
+            ensure_seeded(conn)
+            template = repo.get_sport_template_by_name(conn, "Регби-7")
+            assert template is not None
+            self.template_id = int(template["Id"])
+            self.home_id = repo.create_team(conn, "TEST_Home")
+            self.away_id = repo.create_team(conn, "TEST_Away")
+            self.player_home = repo.create_player(conn, self.home_id, "TEST_HomePlayer", None)
+            self.match_id = repo.create_match(
+                conn, self.template_id, self.home_id, self.away_id, "2026-01-15", None, None, None
+            )
+            repo.add_match_lineup_row(
+                conn, self.match_id, self.home_id, self.player_home, None, "starter", 0
+            )
+            categories = repo.list_categories_by_template(conn, self.template_id)
+            handling = next(c for c in categories if c["Name"] == "Handling")
+            self.category_id = int(handling["Id"])
+            self.action_id = int(
+                repo.list_actions_by_category(conn, self.category_id)[0]["Id"]
+            )
+        finally:
+            conn.close()
+
+    def tearDown(self) -> None:
+        try:
+            os.unlink(self.db_path)
+        except OSError:
+            pass
+
+    def test_cascade_metrics_when_action_unused(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            metric_id = repo.create_team_stat_metric(
+                conn, self.template_id, "TEST_M", self.action_id, "any"
+            )
+            repo.delete_action(conn, self.action_id)
+            self.assertIsNone(repo.get_team_stat_metric(conn, metric_id))
+        finally:
+            conn.close()
+
+    def test_block_action_delete_when_used_in_events(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            repo.create_team_stat_metric(conn, self.template_id, "TEST_M", self.action_id, "any")
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=self.player_home, action_id=self.action_id, outcome="Success",
+            )
+            with self.assertRaises(ValueError):
+                repo.delete_action(conn, self.action_id)
+            self.assertIsNotNone(repo.get_action(conn, self.action_id))
+        finally:
+            conn.close()
+
+    def test_block_category_delete_when_action_used_in_events(self) -> None:
+        conn = connect(self.db_path)
+        try:
+            repo.create_event(
+                conn, self.match_id, 1, 0, "player",
+                player_id=self.player_home, action_id=self.action_id, outcome="Success",
+            )
+            with self.assertRaises(ValueError):
+                repo.delete_category(conn, self.category_id)
+        finally:
+            conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -308,6 +308,26 @@ def get_match_team_stat_counts(conn: sqlite3.Connection, match_id: int) -> list[
     return result
 
 
+def count_events_by_action(conn: sqlite3.Connection, action_id: int) -> int:
+    row = _row(conn, "SELECT COUNT(*) AS c FROM Event WHERE ActionId = ?", (action_id,))
+    return int(row["c"]) if row else 0
+
+
+def delete_team_stat_metrics_by_action(conn: sqlite3.Connection, action_id: int) -> None:
+    _run(conn, "DELETE FROM TeamStatMetric WHERE ActionId = ?", (action_id,))
+
+
+def delete_team_stat_metrics_by_category(conn: sqlite3.Connection, category_id: int) -> None:
+    _run(
+        conn,
+        """
+        DELETE FROM TeamStatMetric
+        WHERE ActionId IN (SELECT Id FROM Action WHERE CategoryId = ?)
+        """,
+        (category_id,),
+    )
+
+
 def list_comments_by_action(conn: sqlite3.Connection, action_id: int) -> list[sqlite3.Row]:
     return _rows(
         conn, "SELECT * FROM CommentTemplate WHERE ActionId = ? ORDER BY SortOrder, Id", (action_id,)
@@ -700,10 +720,18 @@ def delete_comment_template(conn: sqlite3.Connection, comment_id: int) -> None:
 
 
 def delete_action(conn: sqlite3.Connection, action_id: int) -> None:
+    if count_events_by_action(conn, action_id) > 0:
+        raise ValueError("Действие используется в событиях матчей.")
+    delete_team_stat_metrics_by_action(conn, action_id)
     _run(conn, "DELETE FROM Action WHERE Id = ?", (action_id,))
 
 
 def delete_category(conn: sqlite3.Connection, category_id: int) -> None:
+    actions = list_actions_by_category(conn, category_id)
+    for action in actions:
+        if count_events_by_action(conn, int(action["Id"])) > 0:
+            raise ValueError("Категория содержит действия, используемые в событиях матчей.")
+    delete_team_stat_metrics_by_category(conn, category_id)
     _run(conn, "DELETE FROM Category WHERE Id = ?", (category_id,))
 
 

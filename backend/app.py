@@ -175,8 +175,11 @@ def create_app() -> Flask:
 
     @app.post("/directories/templates/<int:template_id>/categories/<int:category_id>/delete")
     def template_delete_category(template_id: int, category_id: int):
-        with db() as conn:
-            repo.delete_category(conn, category_id)
+        try:
+            with db() as conn:
+                repo.delete_category(conn, category_id)
+        except ValueError as exc:
+            flash(str(exc), "error")
         return redirect(url_for("template_detail", template_id=template_id))
 
     @app.post("/directories/templates/<int:template_id>/categories/<int:category_id>/rename")
@@ -236,8 +239,11 @@ def create_app() -> Flask:
 
     @app.post("/directories/templates/<int:template_id>/actions/<int:action_id>/delete")
     def template_delete_action(template_id: int, action_id: int):
-        with db() as conn:
-            repo.delete_action(conn, action_id)
+        try:
+            with db() as conn:
+                repo.delete_action(conn, action_id)
+        except ValueError as exc:
+            flash(str(exc), "error")
         return redirect(url_for("template_detail", template_id=template_id))
 
     @app.post("/directories/templates/<int:template_id>/actions/<int:action_id>/comments/create")
