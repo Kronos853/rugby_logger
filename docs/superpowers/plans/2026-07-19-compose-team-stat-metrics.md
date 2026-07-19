@@ -1674,13 +1674,13 @@ git commit -m "test: cover composite metrics on statistics page"
 - Modify: `docs/development-context.md`
 - Test: full suite
 
-- [ ] **Step 1: Run full isolated test suite**
+- [x] **Step 1: Run full isolated test suite**
 
 Run: `python -m unittest discover -s tests -v`
 
 Expected: all tests PASS
 
-- [ ] **Step 2: Update development-context.md**
+- [x] **Step 2: Update development-context.md**
 
 Replace the team-statistics row in the data model table:
 
@@ -1694,7 +1694,7 @@ Update constructor route description:
 | `/directories/templates/<id>/stat-metrics` | Конструктор командных метрик (↑/↓ метрик; CRUD условий; чекбокс «Учитывать события противника») |
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/development-context.md

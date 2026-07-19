@@ -18,4 +18,4 @@
 ## 4. Verification and documentation
 
 - [x] 4.1 Add page tests for multi-condition constructor controls and preserve match-statistics rendering regressions
-- [ ] 4.2 Run the full isolated test suite and update `docs/development-context.md` with composite metric semantics
+- [x] 4.2 Run the full isolated test suite and update `docs/development-context.md` with composite metric semantics
